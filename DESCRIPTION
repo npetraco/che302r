@@ -1,0 +1,12 @@
+Package: che302r
+Type: Package
+Title: Handy functions for CHEM 302, Physical Chemistry II
+Version: 0.1.0
+Author: Nick Petraco
+Maintainer: Nick Petraco <npetraco@gmail.com>
+Description: Handy functions for CHEM 302, Physical Chemistry II
+    These are a collection of useful functions to help with labratories for CHEM 302
+License: GNU GPLv3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
