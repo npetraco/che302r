@@ -212,9 +212,11 @@ numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E
 #' @title approx.normalize
 #' @description Approximately normalize a 1D-wave function
 #'
-#' @param XXXX
+#' @param wf.info Output from numerov.procedure
+#' @param include.jacobian For use with radial wave functions. To normalize these wave functions the Jacobian must be included (TRUE)
+#' @param plotQ Whether or not to plot the un-normalized probability density. For debugging.
 #'
-#' @details XXXX
+#' @details Approximately normalize a 1D-wave function spit out of numerov.procedure.
 #'
 #'
 #' @return A two column matrix. The first column is the x-axis over which the wave function
@@ -222,7 +224,8 @@ numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E
 #'
 #' @references Quantum Chemistry by Ira Levine. Any edition.
 #'
-#' @examples XXX
+#' @examples
+#' cf. examples in numerov.procedure
 #'
 #--------------------------------------------
 approx.normalize<-function(wf.info, include.jacobian=FALSE, plotQ=FALSE) {

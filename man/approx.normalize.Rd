@@ -7,7 +7,11 @@
 approx.normalize(wf.info, include.jacobian = FALSE, plotQ = FALSE)
 }
 \arguments{
-\item{XXXX}{}
+\item{wf.info}{Output from numerov.procedure}
+
+\item{include.jacobian}{For use with radial wave functions. To normalize these wave functions the Jacobian must be included (TRUE)}
+
+\item{plotQ}{Whether or not to plot the un-normalized probability density. For debugging.}
 }
 \value{
 A two column matrix. The first column is the x-axis over which the wave function
@@ -17,10 +21,10 @@ was obtained. The second column is the normalized wave function solution.
 Approximately normalize a 1D-wave function
 }
 \details{
-XXXX
+Approximately normalize a 1D-wave function spit out of numerov.procedure.
 }
 \examples{
-XXX
+cf. examples in numerov.procedure
 
 }
 \references{
