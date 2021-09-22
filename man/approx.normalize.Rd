@@ -2,7 +2,7 @@
 % Please edit documentation in R/numerov.functions.R
 \name{approx.normalize}
 \alias{approx.normalize}
-\title{approx.normalize}
+\title{Approximate 1D normalization}
 \usage{
 approx.normalize(wf.info, include.jacobian = FALSE, plotQ = FALSE)
 }

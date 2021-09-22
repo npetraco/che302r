@@ -2,7 +2,7 @@
 % Please edit documentation in R/numerov.functions.R
 \name{numerov.procedure}
 \alias{numerov.procedure}
-\title{numerov.procedure}
+\title{Numerov's procedure}
 \usage{
 numerov.procedure(
   xaxis,

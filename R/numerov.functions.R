@@ -16,7 +16,7 @@ G<-function(disc.V, an.Energy) {
 
 
 #--------------------------------------------
-#' @title V, Potential energy function for use with Numerov's procedure
+#' @title Potential energy function for use with Numerov's procedure
 #' @description Potential energy function
 #'
 #' @param xax The x-axis over which to find a solution to the Schrodinger equation with the requested potential
@@ -81,7 +81,7 @@ V<-function(xax,potential.name, l=NULL) {
 
 
 #--------------------------------------------
-#' @title numerov.procedure
+#' @title Numerov's procedure
 #' @description Numerov's procedure to solve simple 1D Schodinger equations
 #'
 #' @param xaxis The x-axis over which to find a solution to the Schrodinger equation with the requested potential
@@ -209,7 +209,7 @@ numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E
 
 
 #--------------------------------------------
-#' @title approx.normalize
+#' @title Approximate 1D normalization
 #' @description Approximately normalize a 1D-wave function
 #'
 #' @param wf.info Output from numerov.procedure

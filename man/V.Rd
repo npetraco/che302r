@@ -2,7 +2,7 @@
 % Please edit documentation in R/numerov.functions.R
 \name{V}
 \alias{V}
-\title{V, Potential energy function for use with Numerov's procedure}
+\title{Potential energy function for use with Numerov's procedure}
 \usage{
 V(xax, potential.name, l = NULL)
 }

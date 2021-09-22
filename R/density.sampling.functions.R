@@ -28,8 +28,58 @@ cartesian.to.spherical<-function(xx.in,yy.in,zz.in) {
 }
 
 #--------------------------------------------
-#Sample the wave function's density and plot corresponding r,theta, phi (x,y,z) values
-#Recipe adapted from D. Cromer, J Chem Educ. 45(10) 626-631 1968
+#' @title Importance sample orbital density
+#' @description Sample the orbital wave function's density from a preset lattice of spherical coordinates
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param spherical.grid lattice of r, theta, phi values from which to sample
+#' @param num.samples number of samples desired
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Uses importance sampling from a lattice of
+#' r, theta, phi values. See Cromer reference for more details. Caution,
+#' requires large lattice to sample from (shperical.grid). This was basically
+#' version 1 of an orbital density sampling procedure.
+#'
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references D. Cromer, J Chem Educ. 45(10) 626-631 1968
+#'
+#' @examples
+#' rmax<-20
+#' dr<-0.05
+#' dth<-0.017
+#' dph<-0.017
+#' r<-seq(from=0,to=rmax,by=dr)
+#' theta<-seq(from=0,to=pi,by=dth)
+#' phi<-seq(from=0,to=2*pi,by=dph)
+#' print(paste("Grid size:",length(r)*length(theta)*length(phi)))
+#' spherical.grid.pts<-expand.grid(R=r,Theta=theta,Phi=phi) # Caution! This can get big!
+#'
+#' #Pick an orbital:
+#' n<-2
+#' l<-(1)
+#' m<-(1)
+#'
+#' #Sample the orbital density:
+#' num.pts<-10000
+#' denisty.samples<-sample.density2(n, l, m, spherical.grid.pts, num.pts)
+#' x<-denisty.samples[,1]
+#' y<-denisty.samples[,2]
+#' z<-denisty.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D with rgl
+#' plot3d(x,y,z,type="s",radius=0.1,xlab="x",ylab="y",zlab="z")
+#'
 #--------------------------------------------
 sample.density2<-function(nqn, lqn, mqn, spherical.grid, num.samples) {
 
