@@ -234,7 +234,7 @@ approx.normalize<-function(wf.info, include.jacobian=FALSE, plotQ=FALSE) {
 
   #Fit a spline function to the wave function^2 values:
   if(include.jacobian == TRUE) {
-    den.func<-splinefun(xx, xx^2 * wfx^2)
+    den.func<-splinefun(xx, 4*pi * xx^2 * wfx^2)
   } else {
     den.func<-splinefun(xx,wfx^2)
   }

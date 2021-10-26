@@ -2,14 +2,27 @@ h  <- 6.626068e-34  # Planck's const
 cl <- 299792458     # Speed of light
 kB <- 1.3806503e-23 # Boltzmann's const
 
-#-------------------------------------------------------------------------------------
-#This is a function to plot the Plank distribution as a function of wavenumber.
-#
-#ARGUEMENTS:
-#nut.min: The smallest wavenumber to use. Use something at least little larger than 0.
-#nut.max: The largest wavenumber to use.
-#Temp: Temperature in Kelvin
-#--------------------------------------------------------------------------------------
+#--------------------------------------------
+#' @title Plank distribution as a function of wavenumber.
+#' @description This is a function to plot the Plank distribution as a function of wavenumber (m^-1).
+#'
+#' @param nut.min The smallest wavenumber to use. Use something at least little larger than 0.
+#' @param nut.max The largest wavenumber to use.
+#' @param Temp The temperature in Kelvin
+#' @param plotQ Whether or not to plot the distribution
+#'
+#' @details This is a function to plot the Plank distribution as a function of wavenumber.
+#' NOTE: The units of wavenumber for this function are m^-1 and NOT cm^-1.
+#'
+#' @return A two column matrix. The first column is the nu-tilde-axis over which the Planck
+#' distribution was computed. The second column is the Planck distribution values
+#'
+#'
+#' @examples
+#' #USE the function planck.distribution.nutilde below:
+#' planck.distribution.nutilde(10000,3000000,1500)
+#'
+#--------------------------------------------
 planck.distribution.nutilde<-function(nut.min, nut.max, Temp, plotQ=FALSE) {
 
   #Make a nu-tilde (nut) axis. This is the x-axis.
@@ -32,18 +45,29 @@ planck.distribution.nutilde<-function(nut.min, nut.max, Temp, plotQ=FALSE) {
   return(plank.dist.info)
 
 }
-#Now USE the function planck.distribution.nutilde below:
-#planck.distribution.nutilde(10000,3000000,1500)
 
 
-#-------------------------------------------------------------------------------------
-#This is a function to plot the Plank distribution as a function of wavelength.
-#
-#ARGUEMENTS:
-#lam.min: The smallest wavelength to use. Use something at least little larger than 0.
-#lam.max: The largest wavelength to use.
-#Temp: Temperature in Kelvin
-#--------------------------------------------------------------------------------------
+#--------------------------------------------
+#' @title Plank distribution as a function of wavelength.
+#' @description This is a function to plot the Plank distribution as a function of wavelength.
+#'
+#' @param lam.min The smallest wavelength to use. Use something at least little larger than 0.
+#' @param lam.max The largest wavelength to use.
+#' @param Temp The temperature in Kelvin
+#' @param plotQ Whether or not to plot the distribution
+#'
+#' @details This is a function to plot the Plank distribution as a function of wavelength.
+#'
+#' @return A two column matrix. The first column is the lambda-axis over which the Planck
+#' distribution was computed. The second column is the Planck distribution values
+#'
+#'
+#' @examples
+#' #Now USE the function planck.distribution.lambda below:
+#' planck.distribution.lambda(10e-9,10000e-9,1500)
+#' planck.distribution.lambda(10e-9,12000e-9,1500)
+#'
+#--------------------------------------------
 planck.distribution.lambda<-function(lam.min, lam.max, Temp, plotQ=FALSE) {
 
   #Make a nu-tilde (nut) axis. This is the x-axis.
@@ -67,19 +91,28 @@ planck.distribution.lambda<-function(lam.min, lam.max, Temp, plotQ=FALSE) {
   return(plank.dist.info)
 
 }
-#Now USE the function planck.distribution.nutilde below:
-#planck.distribution.lambda(10*10^-9,10000*10^-9,1500)
-#planck.distribution.lambda(10*10^-9,12000*10^-9,1500)
 
 
-#-------------------------------------------------------------------------------------
-#This is a function to plot the Plank distribution as a function of frequency.
-#
-#ARGUEMENTS:
-#nu.min: The smallest frequency to use. Use something at least little larger than 0.
-#nu.max: The largest frequency to use.
-#Temp: Temperature in Kelvin
-#--------------------------------------------------------------------------------------
+#--------------------------------------------
+#' @title Plank distribution as a function of frequency.
+#' @description This is a function to plot the Plank distribution as a function of frequency.
+#'
+#' @param nut.min The smallest frequency to use. Use something at least little larger than 0.
+#' @param nut.max The largest frequency to use.
+#' @param Temp The temperature in Kelvin
+#' @param plotQ Whether or not to plot the distribution
+#'
+#' @details This is a function to plot the Plank distribution as a function of frequency.
+#'
+#' @return A two column matrix. The first column is the nu-axis over which the Planck
+#' distribution was computed. The second column is the Planck distribution values
+#'
+#'
+#' @examples
+#' #USE the function planck.distribution.nu below:
+#' planck.distribution.nu(10e10, 6e14, 1500, plotQ = T)
+#'
+#--------------------------------------------
 planck.distribution.nu<-function(nu.min, nu.max, Temp, plotQ=FALSE) {
 
   #Make a nu-tilde (nut) axis. This is the x-axis.
@@ -106,15 +139,28 @@ planck.distribution.nu<-function(nu.min, nu.max, Temp, plotQ=FALSE) {
 }
 
 
-#-------------------------------------------------------------------------------------
-#This is a function to plot the Plank distribution as a function of wavenumber, wavelength or frequency.
-#
-#ARGUEMENTS:
-#typ: The x-axis scale: wavenumber (m^-1), wavelength (m) or frequency (s)
-#x.min: The smallest wavelength to use. Use something at least little larger than 0.
-#x.max: The largest wavelength to use.
-#Temp: Temperature in Kelvin
-#--------------------------------------------------------------------------------------
+#--------------------------------------------
+#' @title Plank distribution as a function of wavenumber, wavelength or frequency.
+#' @description This is a function to plot the Plank distribution as a function of wavenumber, wavelength or frequency.
+#' @param typ   Scale units for witch to compute the Planck distribution. Choices are: "wavenumber", "wavelength", "frequency"
+#' @param x.min The smallest domain value to use. Use something at least little larger than 0
+#' @param x.max The largest domain to use
+#' @param Temp The temperature in Kelvin
+#' @param plotQ Whether or not to plot the distribution
+#'
+#' @details This wrapper is a function to plot the Plank distribution as a function of wavenumber, wavelength or frequency.
+#'
+#' @return A two column matrix. The first column is the x-axis over which the Planck
+#' distribution was computed (m^-1, m or s^-1). The second column is the Planck distribution values
+#'
+#'
+#' @examples
+#' #USE the function planck.distribution below:
+#' planck.distribution(typ = "wavenumber", 10000, 3000000,  1500, plotQ = T)
+#' planck.distribution(typ = "wavelength", 10e-9, 10000e-9, 1500, plotQ = T)
+#' planck.distribution(typ = "frequency",  10e10, 6e14,     1500, plotQ = T)
+#'
+#--------------------------------------------
 planck.distribution<-function(typ, x.min, x.max, Temp, plotQ=FALSE) {
 
   if(typ=="wavenumber"){
