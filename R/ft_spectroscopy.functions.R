@@ -317,7 +317,7 @@ plot.spectrum <- function(spectrum.mat) {
        typ="l",
        ylab="I",
        xlab=expression(paste(tilde(nu)," ",(cm^{-1}))),
-       xlim=rev(range(xf)))
+       xlim=rev(range(spectrum.mat[,1])))
 
 }
 
@@ -457,7 +457,7 @@ find.peaks<-function(spectrum.mat, spectrum.typ="Absorbance", deriv.tol, peak.to
   if(is.null(peak.tol)){
     peaks   <- xx[max.xs.idxs]
     max.yys <- profil[max.xs.idxs]
-  } else {
+  } else if(spectrum.typ=="Absorbance") {
     peaks   <- xx[max.xs.idxs]
     max.yys <- profil[max.xs.idxs]
 
@@ -465,6 +465,16 @@ find.peaks<-function(spectrum.mat, spectrum.typ="Absorbance", deriv.tol, peak.to
 
     peaks   <- peaks[select.max.xs.idxs]
     max.yys <- max.yys[select.max.xs.idxs]
+  } else if(spectrum.typ=="%T") {
+    peaks   <- xx[max.xs.idxs]
+    max.yys <- profil[max.xs.idxs]
+
+    select.max.xs.idxs <- which(profil[max.xs.idxs] <= peak.tol)
+
+    peaks   <- peaks[select.max.xs.idxs]
+    max.yys <- max.yys[select.max.xs.idxs]
+  } else {
+    stop("Specify spectrum.typ = Absorbance or %T, or do not specify peak.tol")
   }
 
 
