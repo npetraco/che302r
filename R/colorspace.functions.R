@@ -66,6 +66,7 @@ wavelengthToColor <- function(wavelength) {
 # rep("orange",4) #580-595
 rough.spec.vec <- c(rep("purple",8),rep("blue",13),rep("green",13),rep("yellow",4),rep("orange",4),rep("red",27))
 
+
 # Gamma correction for sRGB
 gamma.sRGB <- function(RGB.vec){
   RGB.vec.gc <- RGB.vec
@@ -77,6 +78,24 @@ gamma.sRGB <- function(RGB.vec){
     }
   }
   return(RGB.vec.gc)
+}
+
+
+# Gamma correction for AdobeRGB
+gamma.AdobeRGB <- function(RGB.vec){
+
+  gammaa     <- 1/2.19921875
+  RGB.vec.gc <- RGB.vec
+
+  for(i in 1:3){
+    if(RGB.vec[i] >= 0){
+      RGB.vec.gc[i] <-RGB.vec[i]^gammaa
+    } else {
+      RGB.vec.gc[i] <- -1 * (-1*RGB.vec[i])^gammaa
+    }
+  }
+  return(RGB.vec.gc)
+
 }
 
 # Convert a vector to hex components formatted conveniently to use as a color code
@@ -92,9 +111,43 @@ XYZ2sRGB <- function(XYZ.vec){
   )
 
   RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec)
+  #print("Step1")
+  #print(RGB.vec)
 
   # gamma correction:
   RGB.vec <- gamma.sRGB(RGB.vec)
+  #print("Step2")
+  #print(RGB.vec)
+
+  # Re-scale from 0 to 255
+  RGB.vec <- round(RGB.vec*255)
+  RGB.vec <- RGB.vec*(RGB.vec>=0) #Clip any negatives to 0
+  RGB.vec <- RGB.vec*(RGB.vec<=255) #Clip any +255 to 255
+  # Convert to a hex code:
+  RGB.hex <- vec2hex(RGB.vec)
+
+  RGB.info         <- list(RGB.vec, RGB.hex)
+  names(RGB.info)  <- c("sRGB","hex")
+
+  return(RGB.info)
+
+}
+
+
+# Hand convert to AdobeRGB:
+XYZ2Adobe <- function(XYZ.vec){
+
+  T.XYZ2RGB <- rbind(
+    c( 2.0413690, -0.5649464, -0.3446944),
+    c(-0.9692660,  1.8760108,  0.0415560),
+    c( 0.0134474, -0.1183897,  1.0154096)
+  )
+
+  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec)
+
+  # gamma correction:
+  RGB.vec <- gamma.AdobeRGB(RGB.vec)
+
   # Re-scale from 0 to 255
   RGB.vec <- round(RGB.vec*255)
   RGB.vec <- RGB.vec*(RGB.vec>=0) #Clip any negatives to 0
