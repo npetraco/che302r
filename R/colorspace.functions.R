@@ -98,8 +98,28 @@ gamma.AdobeRGB <- function(RGB.vec){
 
 }
 
+
+# Gamma correction for P3RGB
+gamma.P3RGB <- function(RGB.vec){
+
+  gammaa     <- 1/2.6 # ????
+  RGB.vec.gc <- RGB.vec
+
+  for(i in 1:3){
+    if(RGB.vec[i] >= 0){
+      RGB.vec.gc[i] <-RGB.vec[i]^gammaa
+    } else {
+      RGB.vec.gc[i] <- -1 * (-1*RGB.vec[i])^gammaa
+    }
+  }
+  return(RGB.vec.gc)
+
+}
+
+
 # Convert a vector to hex components formatted conveniently to use as a color code
 vec2hex <- function(a.vec){paste(c("#",as.character(as.hexmode(a.vec))), collapse = "")}
+
 
 # Hand convert to sRGB:
 XYZ2sRGB <- function(XYZ.vec){
@@ -121,13 +141,40 @@ XYZ2sRGB <- function(XYZ.vec){
 
   # Re-scale from 0 to 255
   RGB.vec <- round(RGB.vec*255)
-  RGB.vec <- RGB.vec*(RGB.vec>=0) #Clip any negatives to 0
-  RGB.vec <- RGB.vec*(RGB.vec<=255) #Clip any +255 to 255
+  #print("Step3")
+  #print(RGB.vec)
+
+  #Clip any negatives to 0
+  for(i in 1:3){
+    if(RGB.vec[i] < 0) {
+      RGB.vec[i] <- 0
+    }
+  }
+  #print("Step4")
+  #print(RGB.vec)
+
+  #Clip any +255 to 255
+  for(i in 1:3){
+    if(RGB.vec[i] > 255) {
+      RGB.vec[i] <- 255
+    }
+  }
+  #print("Step5")
+  #print(RGB.vec)
+
   # Convert to a hex code:
   RGB.hex <- vec2hex(RGB.vec)
+  #print("Step6")
+  #print(RGB.hex)
+
+  # Check and see if RGB all ended up as 0......
+  if(sum(RGB.vec) == 0) {
+    RGB.hex <- "#000000"
+    warning("All three channels = 0!")
+  }
 
   RGB.info         <- list(RGB.vec, RGB.hex)
-  names(RGB.info)  <- c("sRGB","hex")
+  names(RGB.info)  <- c("RGB","hex")
 
   return(RGB.info)
 
@@ -150,13 +197,96 @@ XYZ2Adobe <- function(XYZ.vec){
 
   # Re-scale from 0 to 255
   RGB.vec <- round(RGB.vec*255)
-  RGB.vec <- RGB.vec*(RGB.vec>=0) #Clip any negatives to 0
-  RGB.vec <- RGB.vec*(RGB.vec<=255) #Clip any +255 to 255
+  #print("Step3")
+  #print(RGB.vec)
+
+  #Clip any negatives to 0
+  for(i in 1:3){
+    if(RGB.vec[i] < 0) {
+      RGB.vec[i] <- 0
+    }
+  }
+  #print("Step4")
+  #print(RGB.vec)
+
+  #Clip any +255 to 255
+  for(i in 1:3){
+    if(RGB.vec[i] > 255) {
+      RGB.vec[i] <- 255
+    }
+  }
+  #print("Step5")
+  #print(RGB.vec)
+
   # Convert to a hex code:
   RGB.hex <- vec2hex(RGB.vec)
+  #print("Step6")
+  #print(RGB.hex)
+
+  # Check and see if RGB all ended up as 0......
+  if(sum(RGB.vec) == 0) {
+    RGB.hex <- "#000000"
+    warning("All three channels = 0!")
+  }
 
   RGB.info         <- list(RGB.vec, RGB.hex)
-  names(RGB.info)  <- c("sRGB","hex")
+  names(RGB.info)  <- c("RGB","hex")
+
+  return(RGB.info)
+
+}
+
+
+# Hand convert to DCI-P3 Display:
+XYZ2P3 <- function(XYZ.vec){
+
+  T.XYZ2RGB <- rbind(
+    c( 2.49349691, -0.93138362, -0.40271078),
+    c(-0.82948897,  1.76266406,  0.02362469),
+    c( 0.03584583, -0.07617239,  0.95688452)
+  )
+
+  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec)
+
+  # gamma correction:
+  RGB.vec <- gamma.P3RGB(RGB.vec)
+
+  # Re-scale from 0 to 255
+  RGB.vec <- round(RGB.vec*255)
+  #print("Step3")
+  #print(RGB.vec)
+
+  #Clip any negatives to 0
+  for(i in 1:3){
+    if(RGB.vec[i] < 0) {
+      RGB.vec[i] <- 0
+    }
+  }
+  #print("Step4")
+  #print(RGB.vec)
+
+  #Clip any +255 to 255
+  for(i in 1:3){
+    if(RGB.vec[i] > 255) {
+      RGB.vec[i] <- 255
+    }
+  }
+  #print("Step5")
+  #print(RGB.vec)
+
+  # Convert to a hex code:
+  RGB.hex <- vec2hex(RGB.vec)
+  #print("Step6")
+  #print(RGB.hex)
+
+  # Check and see if RGB all ended up as 0......
+  if(sum(RGB.vec) == 0) {
+    RGB.hex <- "#000000"
+    warning("All three channels = 0!")
+  }
+
+  RGB.info         <- list(RGB.vec, RGB.hex)
+  names(RGB.info)  <- c("RGB","hex")
 
   return(RGB.info)
 

@@ -1,8 +1,3 @@
-h  <- 6.626068e-34  # Planck's const
-cl <- 299792458     # Speed of light
-kB <- 1.3806503e-23 # Boltzmann's const
-hb <- h/(2*pi)      # Reduced Planck's const
-
 #--------------------------------------------
 #' @title Plank distribution as a function of wavenumber.
 #' @description This is a function to plot the Plank distribution as a function of wavenumber (m^-1).
