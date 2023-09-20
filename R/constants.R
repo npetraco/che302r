@@ -1,3 +1,34 @@
+#' @title Constants
+#'
+#' @description Constants available
+#'
+#' @details  These physical constants and handy conversions are avilible in the che302r library.
+#'
+#' @usage Constants:
+#' h   Planck's const, Js
+#' cl  Speed of light, m/s
+#' kB  Boltzmann's const, J/K
+#' hb  Reduced Planck's const, Js
+#' N.A Avogadro's number, particles
+#' me  mass of electron, kg
+#' mP  mass of proton, kg
+#' mN  mass of neutron, kg
+#' ec  charge of electron, Coulombs
+#' RH  Rydberg constant, wavenumbers cm^-1
+#' RHJ Rydberg constant, Joules
+#'
+#' Handy Conversions:
+#' eV2J         electron-volt to Joules, energy gained by 1 e- accelerated though 1V
+#' J2eV         Joules to eV
+#' hartree2J    hartrees to Joules
+#' amu2kg       amu to kg
+#' bohr2m       bohr to meters
+#' auf2Hz       atomic units frequency to Hz, Unit= s^-1
+#' lambdaFw2icm atomic units mass weighted Fw eigenvalues to nu-tilde = omega/(2*pi*c), Unit = cm^-1
+#' lambdaF2icm  Conversion factor from sqrt(hartree/amu-bohr^2) to cm^-1
+constants <- function(){
+  print("See: ?constants")
+}
 h    <- 6.626068e-34          # Planck's const, Js
 cl   <- 299792458             # Speed of light, m/s
 kB   <- 1.3806503e-23         # Boltzmann's const, J/K
