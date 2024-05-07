@@ -118,7 +118,6 @@ gamma.P3RGB <- function(RGB.vec){
 
 
 # Convert a vector to hex components formatted conveniently to use as a color code
-#vec2hex <- function(a.vec){paste(c("#",as.character(as.hexmode(a.vec))), collapse = "")}
 vec2hex <- function(a.vec){
 
   a.vec.hex <- NULL
