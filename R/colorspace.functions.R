@@ -118,8 +118,26 @@ gamma.P3RGB <- function(RGB.vec){
 
 
 # Convert a vector to hex components formatted conveniently to use as a color code
-vec2hex <- function(a.vec){paste(c("#",as.character(as.hexmode(a.vec))), collapse = "")}
+#vec2hex <- function(a.vec){paste(c("#",as.character(as.hexmode(a.vec))), collapse = "")}
+vec2hex <- function(a.vec){
 
+  a.vec.hex <- NULL
+  for(i in 1:length(a.vec)){
+    if(abs(a.vec[i]) > 15) {
+      hex1i     <- as.character(as.hexmode(a.vec[i]))
+      a.vec.hex <- paste(a.vec.hex, hex1i, sep="")
+    } else if(abs(a.vec[i]) <= 15) {
+      # as.hexmode() just gives four bits back for numbers 0-15. Paste on an extra 0 needed for color conversion
+      hex1i <- as.character(as.hexmode(a.vec[i]))
+      a.vec.hex <- paste(a.vec.hex, "0", hex1i, sep="")
+    } else {
+      stop("Vector's components must be numbers!")
+    }
+  }
+  a.vec.hex <- paste0("#",a.vec.hex)
+
+  return(a.vec.hex)
+}
 
 # Hand convert to sRGB:
 XYZ2sRGB <- function(XYZ.vec){

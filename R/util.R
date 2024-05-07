@@ -9,6 +9,6 @@
 #' @export
 update_che302r <- function() {
   print("Updating che302r")
-  devtools::install_github("npetraco/che302r")
+  remotes::install_github("npetraco/che302r")
   print("Done!")
 }
