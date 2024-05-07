@@ -9,6 +9,8 @@
 #' @export
 update_che302r <- function() {
   print("Updating che302r")
-  remotes::install_github("npetraco/che302r")
+  unloadNamespace("che302r")
+  remotes::install_github("npetraco/che302r", force = T)
+  library(che302r)
   print("Done!")
 }
