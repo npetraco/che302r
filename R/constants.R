@@ -32,7 +32,9 @@ constants <- function(){
 h    <- 6.626068e-34          # Planck's const, Js
 cl   <- 299792458             # Speed of light, m/s
 kB   <- 1.3806503e-23         # Boltzmann's const, J/K
+kb   <- 1.3806503e-23         # Also Boltzmann's const, J/K
 hb   <- h/(2*pi)              # Reduced Planck's const, Js
+hbar <- h/(2*pi)              # Also reduced Planck's const, Js
 N.A  <- 6.02214076e23         # Avogadro's number, particles
 me   <- 9.1093837015e-31      # mass of electron, kg
 mP   <- 1.67262192369e-27     # mass of proton, kg
