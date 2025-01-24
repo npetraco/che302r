@@ -4,7 +4,13 @@
 \alias{V}
 \title{Potential energy function for use with Numerov's procedure}
 \usage{
-V(xax, potential.name, l = NULL)
+V(
+  xax,
+  potential.name,
+  l = NULL,
+  wonky.params = list(coef = c(1, 1, 1, 1, 1, 1), root = c(-2, -1, 0, 1, 2, 3)),
+  nh3.params = c(k = 1, b = 12, c = 1)
+)
 }
 \arguments{
 \item{xax}{The x-axis over which to find a solution to the Schrodinger equation with the requested potential}

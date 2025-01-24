@@ -11,7 +11,8 @@ numerov.procedure(
   nodes.in.state,
   E.guess,
   num.iterations,
-  delay.time = 0
+  delay.time = 0,
+  ...
 )
 }
 \arguments{

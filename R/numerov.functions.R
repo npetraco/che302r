@@ -52,12 +52,12 @@ G<-function(disc.V, an.Energy) {
 #' plot(x,V(x,"anharmonic"))
 #'
 #--------------------------------------------
-V<-function(xax,potential.name, l=NULL) {
+V<-function(xax,potential.name, l=NULL, wonky.params=list(coef=c(1,1,1,1,1,1), root=c(-2,-1,0,1,2,3)), nh3.params=c(k=1,b=12,c=1)) {
 
-  if( !(potential.name %in% c("box", "harmonic", "anharmonic", "radial")) ){
+  if( !(potential.name %in% c("box", "harmonic", "anharmonic", "radial", "wonky", "nh3")) ){
     #print("Error!")
     #print("Your choices are: box, harmonic, anharmonic or laguerre.")
-    stop("Bad choice in PE function. Your choices are: box, harmonic, anharmonic or radial.")
+    stop("Bad choice in PE function. Your choices are: box, harmonic, anharmonic, radial, nh3 or wonky.")
   }
 
   if(potential.name=="box"){
@@ -75,6 +75,34 @@ V<-function(xax,potential.name, l=NULL) {
 
   if(potential.name=="radial"){
     return(   0.5*((l*(l+1))/xax^2) -(1/xax))  #... used to send in l
+  }
+
+  if(potential.name=="wonky"){
+    aa <- wonky.params$coef[1]
+    bb <- wonky.params$coef[2]
+    cc <- wonky.params$coef[3]
+    dd <- wonky.params$coef[4]
+    ee <- wonky.params$coef[5]
+    ff <- wonky.params$coef[6]
+    r1 <- wonky.params$root[1]
+    r2 <- wonky.params$root[2]
+    r3 <- wonky.params$root[3]
+    r4 <- wonky.params$root[4]
+    r5 <- wonky.params$root[5]
+    r6 <- wonky.params$root[6]
+    return((aa*xax - (r1)) * (bb*xax - (r2)) * (cc*xax - (r3)) * (dd*xax - (r4)) * (ee*xax - (r5)) * (ff*xax - (r6))) #A wonky potential for demos
+  }
+
+  if(potential.name=="nh3"){
+    # Coef values taken from: https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Quantum_Tutorials_(Rioux)/04%3A_Spectroscopy/4.04%3A_The_Ammonia_Inversion_and_the_Maser
+    # k <- 0.07598
+    # b <- 0.05684
+    # c <- 1.36696
+    #
+    kk <- nh3.params[1]
+    bb <- nh3.params[2]
+    cc <- nh3.params[3]
+    return(0.5*kk*xax^2 + bb*exp(-cc*xax^2)) #NH3 inversion potential
   }
 
 }
@@ -152,18 +180,42 @@ V<-function(xax,potential.name, l=NULL) {
 #' plot(r, r^2*Npsi.info[,2], xlim=c(min(r),max(r)), ylab="N psi(x)", typ="l")
 #'
 #--------------------------------------------
-numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E.guess,num.iterations, delay.time=0.00){
+numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E.guess,num.iterations, delay.time=0.00, ...){
 
-  Elow<-NULL  #Initialization
-  Ehigh<-NULL
-  Er<-E.guess #First iteration Enenrgy
+  Elow  <- NULL  #Initialization
+  Ehigh <- NULL
+  Er    <- E.guess #First iteration Energy
+
+  vargs <- list(...) # Params for potential energy function if any passed in
 
   for(iter in 1:num.iterations) {
 
     if(PE.function.name=="radial"){
-      Gr<-G(V(xaxis,PE.function.name,l), Er)
-    } else{
-      Gr<-G(V(xaxis,PE.function.name), Er)
+
+      if(length(vargs)==0) { # No l quantum number passed in so just grab the one (that should be) in global memory
+        Gr<-G(V(xaxis,PE.function.name, l = l), Er)
+      } else {
+        Gr<-G(V(xaxis,PE.function.name, l = vargs$l), Er)
+      }
+
+    } else if(PE.function.name=="nh3"){
+
+      if(length(vargs)==0) { # No params for the nh3-like inversion potential passed in, so use defaults internally stored in G. See G above.
+        Gr<-G(V(xaxis,PE.function.name), Er)
+      } else {
+        Gr<-G(V(xaxis,PE.function.name, nh3.params = vargs$nh3.params), Er)
+      }
+
+    } else if(PE.function.name=="wonky"){
+
+      if(length(vargs)==0) { # No params for the wonky polynomial potential passed in, so use defaults internally stored in G. See G above.
+        Gr<-G(V(xaxis,PE.function.name), Er)
+      } else {
+        Gr<-G(V(xaxis,PE.function.name, wonky.params = vargs$wonky.params), Er)
+      }
+
+    } else {
+      Gr<-G(V(xaxis,PE.function.name), Er) # At this point PE.function.name should be either box, harmonic or anharmonic
     }
 
 

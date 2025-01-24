@@ -29,19 +29,21 @@
 constants <- function(){
   print("See: ?constants")
 }
-h    <- 6.626068e-34          # Planck's const, Js
-cl   <- 299792458             # Speed of light, m/s
-kB   <- 1.3806503e-23         # Boltzmann's const, J/K
-kb   <- 1.3806503e-23         # Also Boltzmann's const, J/K
-hb   <- h/(2*pi)              # Reduced Planck's const, Js
-hbar <- h/(2*pi)              # Also reduced Planck's const, Js
-N.A  <- 6.02214076e23         # Avogadro's number, particles
-me   <- 9.1093837015e-31      # mass of electron, kg
-mP   <- 1.67262192369e-27     # mass of proton, kg
-mN   <- 1.67492749804e-27     # mass of neutron, kg
-ec   <- 1.60217663e-19        # charge of electron, Coulombs
-RH   <- 109625                # Rydberg constant, wavenumbers cm^-1
-RHJ  <- h * cl/( 1/(RH*100) ) # Rydberg constant, Joules
+h     <- 6.62607015e-34        # Planck's const, Js
+cl    <- 299792458             # Speed of light, m/s
+kB    <- 1.3806503e-23         # Boltzmann's const, J/K
+kb    <- 1.3806503e-23         # Also Boltzmann's const, J/K
+hb    <- h/(2*pi)              # Reduced Planck's const, Js
+hbar  <- h/(2*pi)              # Also reduced Planck's const, Js
+h.bar <- h/(2*pi)              # Also^2 reduced Planck's const, Js
+N.A   <- 6.02214076e23         # Avogadro's number, particles
+na    <- N.A                   # Also Avogadro's number, particles; against my better judgement......
+me    <- 9.1093837015e-31      # mass of electron, kg
+mP    <- 1.67262192369e-27     # mass of proton, kg
+mN    <- 1.67492749804e-27     # mass of neutron, kg
+ec    <- 1.60217663e-19        # charge of electron, Coulombs
+RH    <- 109625                # Rydberg constant, wavenumbers cm^-1
+RHJ   <- h * cl/( 1/(RH*100) ) # Rydberg constant, Joules
 
 # Handy Conversions
 eV2J         <- 1.602176634e-19                         # electron-volt to Joules, energy gained by 1 e- accelerated though 1V
