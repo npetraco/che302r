@@ -7,16 +7,24 @@
 dsi(theta, d.slit.sep, a.slit.width, lambda, Imax = 1)
 }
 \arguments{
-\item{I.max}{The largest wavenumber to use.}
+\item{theta}{direction angle between -pi/2 and pi/2 (-90 deg, 90deg)}
+
+\item{d.slit.sep}{slit separation}
+
+\item{a.slit.width}{slit width}
+
+\item{lambda}{wavelength}
+
+\item{I.max}{largest intensity to use}
 }
 \value{
-XXXX
+Double slit intensity.
 }
 \description{
 This is a function to evaluate the double slit intensity function
 }
 \details{
-This is a function to evaluate the double slit intensity function
+This is a function to evaluate the double slit intensity function.
 }
 \examples{
 library(che302r)
