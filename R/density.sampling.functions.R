@@ -40,7 +40,7 @@ cartesian.to.spherical<-function(xx.in,yy.in,zz.in) {
 #' @details Sample the wave function's density and plot corresponding
 #' r,theta, phi (x,y,z) values. Uses importance sampling from a lattice of
 #' r, theta, phi values. See Cromer reference for more details. Caution,
-#' requires large lattice to sample from (shperical.grid). This was basically
+#' requires large lattice to sample from (spherical.grid). This was basically
 #' version 1 of an orbital density sampling procedure.
 #'
 #'

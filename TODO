@@ -3,3 +3,6 @@ Angular momentum matrix elements and matrices
 2D particle simulation in a box
   different size boxes (square, retangle, sphere, etc??)
   change potentials
+
+UV-vis simulation functions.
+  cf. https://pubs.acs.org/doi/epdf/10.1021/acs.jchemed.3c00171?ref=article_openPDF
