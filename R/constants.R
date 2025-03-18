@@ -49,7 +49,8 @@ RHJ   <- h * cl/( 1/(RH*100) ) # Rydberg constant, Joules
 eV2J         <- 1.602176634e-19                         # electron-volt to Joules, energy gained by 1 e- accelerated though 1V
 J2eV         <- eV2J^(-1)                               # Joules to eV
 hartree2J    <- 4.3597482e-18                           # hartrees to Joules
-amu2kg       <- 1.6603145e-27                           # amu to kg
+amu2kg       <- 1.0/(N.A*1000)                          # amu to kg = 1g/mol * 1mol/N.A * 1kg/1000g
+kg2amu       <- N.A*1000                                # kg to amu
 bohr2m       <- 5.2918e-11                              # bohr to meters
 auf2Hz       <- sqrt(hartree2J * 1/(amu2kg * bohr2m^2)) # atomic units frequency to Hz, Unit= s^-1
 lambdaFw2icm <- auf2Hz/(2*pi*cl*100)                    # atomic units mass weighted Fw eigenvalues to nu-tilde = omega/(2*pi*c), Unit = cm^-1

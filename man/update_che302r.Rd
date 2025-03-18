@@ -2,16 +2,16 @@
 % Please edit documentation in R/util.R
 \name{update_che302r}
 \alias{update_che302r}
-\title{Easily update the che302r library by installing the current version from the github site}
+\title{Update che302r package}
 \usage{
 update_che302r()
 }
-\arguments{
-\item{XX}{The XX}
-}
 \value{
-The function will XX
+Nothing
 }
 \description{
+Easily update the che302r library by installing the current version from the github site.
+}
+\details{
 Easily update the che302r library by installing the current version from the github site
 }

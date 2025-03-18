@@ -7,11 +7,14 @@
 logsumexp(logv)
 }
 \arguments{
-\item{XX}{The XX}
+\item{logv}{vector of log-ed quantities to add up}
 }
 \value{
 The function will XX
 }
 \description{
-Handy for calculating Z from a vector of log potentials.
+Log sum exp trick to prevent over/underflow
+}
+\details{
+Handy for calculating logZ from a vector of log Boltzmann factors.
 }
