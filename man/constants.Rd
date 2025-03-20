@@ -5,17 +5,20 @@
 \title{Constants}
 \usage{
 Constants:
-h   Planck's const, Js
-cl  Speed of light, m/s
-kB  Boltzmann's const, J/K
-hb  Reduced Planck's const, Js
-N.A Avogadro's number, particles
-me  mass of electron, kg
-mP  mass of proton, kg
-mN  mass of neutron, kg
-ec  charge of electron, Coulombs
-RH  Rydberg constant, wavenumbers cm^-1
-RHJ Rydberg constant, Joules
+h     Planck's const, Js
+cl    Speed of light, m/s
+kB    Boltzmann's const, J/K
+hb    Reduced Planck's const, Js
+N.A   Avogadro's number, particles
+me    mass of electron, kg
+mP    mass of proton, kg
+mN    mass of neutron, kg
+ec    charge of electron, Coulombs
+RH    Rydberg constant, wavenumbers cm^-1
+RHJ   Rydberg constant, Joules
+alphaf Fine structure constant, dimensionless
+eps0   Vacuum permittivity, Farads/m
+a0     Bohr radius, m
 
 Handy Conversions:
 eV2J         electron-volt to Joules, energy gained by 1 e- accelerated though 1V

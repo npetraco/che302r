@@ -5,17 +5,20 @@
 #' @details  These physical constants and handy conversions are avilible in the che302r library.
 #'
 #' @usage Constants:
-#' h   Planck's const, Js
-#' cl  Speed of light, m/s
-#' kB  Boltzmann's const, J/K
-#' hb  Reduced Planck's const, Js
-#' N.A Avogadro's number, particles
-#' me  mass of electron, kg
-#' mP  mass of proton, kg
-#' mN  mass of neutron, kg
-#' ec  charge of electron, Coulombs
-#' RH  Rydberg constant, wavenumbers cm^-1
-#' RHJ Rydberg constant, Joules
+#' h     Planck's const, Js
+#' cl    Speed of light, m/s
+#' kB    Boltzmann's const, J/K
+#' hb    Reduced Planck's const, Js
+#' N.A   Avogadro's number, particles
+#' me    mass of electron, kg
+#' mP    mass of proton, kg
+#' mN    mass of neutron, kg
+#' ec    charge of electron, Coulombs
+#' RH    Rydberg constant, wavenumbers cm^-1
+#' RHJ   Rydberg constant, Joules
+#'alphaf Fine structure constant, dimensionless
+#'eps0   Vacuum permittivity, Farads/m
+#'a0     Bohr radius, m
 #'
 #' Handy Conversions:
 #' eV2J         electron-volt to Joules, energy gained by 1 e- accelerated though 1V
@@ -29,21 +32,24 @@
 constants <- function(){
   print("See: ?constants")
 }
-h     <- 6.62607015e-34        # Planck's const, Js
-cl    <- 299792458             # Speed of light, m/s
-kB    <- 1.3806503e-23         # Boltzmann's const, J/K
-kb    <- 1.3806503e-23         # Also Boltzmann's const, J/K
-hb    <- h/(2*pi)              # Reduced Planck's const, Js
-hbar  <- h/(2*pi)              # Also reduced Planck's const, Js
-h.bar <- h/(2*pi)              # Also^2 reduced Planck's const, Js
-N.A   <- 6.02214076e23         # Avogadro's number, particles
-na    <- N.A                   # Also Avogadro's number, particles; against my better judgement......
-me    <- 9.1093837015e-31      # mass of electron, kg
-mP    <- 1.67262192369e-27     # mass of proton, kg
-mN    <- 1.67492749804e-27     # mass of neutron, kg
-ec    <- 1.60217663e-19        # charge of electron, Coulombs
-RH    <- 109625                # Rydberg constant, wavenumbers cm^-1
-RHJ   <- h * cl/( 1/(RH*100) ) # Rydberg constant, Joules
+h      <- 6.62607015e-34        # Planck's const, Js
+cl     <- 299792458             # Speed of light, m/s
+kB     <- 1.3806503e-23         # Boltzmann's const, J/K
+kb     <- 1.3806503e-23         # Also Boltzmann's const, J/K
+hb     <- h/(2*pi)              # Reduced Planck's const, Js
+hbar   <- h/(2*pi)              # Also reduced Planck's const, Js
+h.bar  <- h/(2*pi)              # Also^2 reduced Planck's const, Js
+N.A    <- 6.02214076e23         # Avogadro's number, particles
+na     <- N.A                   # Also Avogadro's number, particles; against my better judgement......
+me     <- 9.1093837015e-31      # mass of electron, kg
+mP     <- 1.67262192369e-27     # mass of proton, kg
+mN     <- 1.67492749804e-27     # mass of neutron, kg
+ec     <- 1.60217663e-19        # charge of electron, Coulombs
+RH     <- 109625                # Rydberg constant, wavenumbers cm^-1
+alphaf <- 0.0072973525643       # Fine structure constant
+eps0   <- 8.8541878188e-12      # Vacuum permittivity: ec^2/(2*alphaf*h*cl), Farads/m
+a0     <- 5.29177210903e-11     # Bohr radius: 4*pi*eps0*hb^2/(me*ec^2), m
+RHJ    <- h * cl/( 1/(RH*100) ) # Rydberg constant, Joules
 
 # Handy Conversions
 eV2J         <- 1.602176634e-19                         # electron-volt to Joules, energy gained by 1 e- accelerated though 1V
