@@ -5,17 +5,17 @@
 \title{Constants}
 \usage{
 Constants:
-h     Planck's const, Js
-cl    Speed of light, m/s
-kB    Boltzmann's const, J/K
-hb    Reduced Planck's const, Js
-N.A   Avogadro's number, particles
-me    mass of electron, kg
-mP    mass of proton, kg
-mN    mass of neutron, kg
-ec    charge of electron, Coulombs
-RH    Rydberg constant, wavenumbers cm^-1
-RHJ   Rydberg constant, Joules
+h      Planck's const, Js
+cl     Speed of light, m/s
+kB     Boltzmann's const, J/K
+hb     Reduced Planck's const, Js
+N.A    Avogadro's number, particles
+me     mass of electron, kg
+mP     mass of proton, kg
+mN     mass of neutron, kg
+ec     charge of electron, Coulombs
+RH     Rydberg constant, wavenumbers cm^-1
+RHJ    Rydberg constant, Joules
 alphaf Fine structure constant, dimensionless
 eps0   Vacuum permittivity, Farads/m
 a0     Bohr radius, m
@@ -34,5 +34,6 @@ lambdaF2icm  Conversion factor from sqrt(hartree/amu-bohr^2) to cm^-1
 Constants available
 }
 \details{
-These physical constants and handy conversions are avilible in the che302r library.
+These physical constants and handy conversions are available in the che302r library.
+Reference for these and more cf. https://www.nist.gov/pml/fundamental-physical-constants
 }
