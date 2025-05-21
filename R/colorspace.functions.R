@@ -1,5 +1,17 @@
-#takes wavelength in nm and returns an rgb-alpha value
-#From: http://www.physics.sfasu.edu/astro/color/spectra.html converted to R
+#--------------------------------------------
+#' @title wavelengthToColor.
+#' @description This is a function takes wavelength in nm and returns an rgb-alpha value in hex.
+#'
+#' @param wavelength a wavelength in nm
+#'
+#' @details This is a function takes wavelength in nm and returns an rgb-alpha value in hex.
+#' From: http://www.physics.sfasu.edu/astro/color/spectra.html converted to R.
+#'
+#' @return A hexcode for an RGB color
+#'
+#' @examples
+#' wavelengthToColor(536)
+#--------------------------------------------
 wavelengthToColor <- function(wavelength) {
   wl <- wavelength
   gamma <- 1
@@ -34,7 +46,7 @@ wavelengthToColor <- function(wavelength) {
     B <- 0
   }
 
-  #   #intensty is lower at the edges of the visible spectrum.
+  # intensty is lower at the edges of the visible spectrum.
   if (wl > 780 || wl < 380) {
     alpha <- 0
   } else if (wl > 700) {
@@ -45,17 +57,59 @@ wavelengthToColor <- function(wavelength) {
     alpha <- 1
   }
 
+  # colorSpace is an array with 5 elements.
+  # The first element is the complete code as a string.
+  # Use colorSpace[0] as is to display the desired color.
+  # Use the last four elements alone or together to access
+  # each of the individual r, g, b and a channels.
+  #
   #colorSpace <- paste("rgba(", (R * 100), "%,", (G * 100), "%,", (B * 100), "%, ", alpha, ")", R, G, B, alpha)
+
+  # Do it this way instead of the above:
   colorSpace <- rgb(R, G, B, alpha)
-  #
-  #   #colorSpace is an array with 5 elements.
-  #   #The first element is the complete code as a string.
-  #   #Use colorSpace[0] as is to display the desired color.
-  #   #use the last four elements alone or together to access each of the individual r, g, b and a channels.
-  #
+
   return(colorSpace)
+}
+
+
+#--------------------------------------------
+#' @title color_partition
+#' @description This is a function takes wavelength in nm and returns simple color name
+#'
+#' @param wavelength a wavelength in nm
+#'
+#' @details This is a function takes wavelength in nm and returns simple color name.
+#' It works the same way as wavelengthToColor
+#'
+#' @return A hexcode for an RGB color
+#'
+#' @examples
+#' wavelengthToColor(536)
+#--------------------------------------------
+color_partition <- function(wavelength) {
+  wl <- wavelength
+
+  if (wl >= 380 && wl < 440) {
+    color.name <- "violet"
+  } else if (wl >= 440 && wl < 490) {
+    color.name <- "blue"
+  } else if (wl >= 490 && wl < 510) {
+    color.name <- "green"
+  } else if (wl >= 510 && wl < 580) {
+    color.name <- "yellow"
+  } else if (wl >= 580 && wl < 645) {
+    color.name <- "orange"
+  } else if (wl >= 645 && wl <= 780) {
+    color.name <- "red"
+  } else {
+    #color.name <- NA
+    color.name <- "#00000000"
+  }
+
+  return(color.name)
 
 }
+
 
 #A rough visible spectrum vector:
 # wl<-seq(390,730,5)
@@ -66,6 +120,68 @@ wavelengthToColor <- function(wavelength) {
 # rep("orange",4) #580-595
 rough.spec.vec <- c(rep("purple",8),rep("blue",13),rep("green",13),rep("yellow",4),rep("orange",4),rep("red",27))
 
+#normalized xyz chromaticity coordinates. NOTE: needs library(colorspace)
+x31 <- ciexyz31[,2]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
+y31 <- ciexyz31[,3]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
+
+
+# Compute "purity" of a point in xy-chromaticity space (i.e. it's "closeness"
+# to the locus convex hull wrt/ a chosen whit point). Assumes as default D65 white point.
+color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
+
+  # Compute the nearest point on the gamut convex hull to xc, yc wrt/ the white point:
+  hue.info.vec <- compute_hue(xc=xc, yc=yc, xw=xw, yw=yw)
+  hue.lambda   <- hue.info.vec[1]
+  xhull        <- hue.info.vec[2]
+  yhull        <- hue.info.vec[3]
+
+  val <- sqrt(((xc-xw)^2 +(yc-yw)^2)/((xhull-xw)^2 +(yhull-yw)^2))
+  if(percentQ==T){
+    val <- val*100
+  }
+
+  if(printQ==T){
+    print(paste0("Comparing to lambda: ", hue.lambda))
+    print(paste0("Purity (saturation): ", val))
+  }
+
+  return(val)
+
+}
+
+
+# Compute the approximate closest point on the convex hull of the gamut to
+# chromaticity coords xc, yc wrt white point xw, yw. D65 white point is the
+# default.
+compute_hue <- function(xc, yc, xw=0.31, yw=0.33){
+
+  m <- (yc - yw)/(xc-xw) # slope of line between xc,yc and xw,yw
+  b <- (yw-m*xw)         # intercept of line between xc,yc and xw,yw
+
+  # Standard form coefs, just for a little more readability:
+  A <- m
+  B <- -1
+  C <- b
+
+  # Compute the distance between the line and every point on the gamut convex hull:
+  dvals <- rep(-1, nrow(ciexyz31))
+  for(i in 1:nrow(ciexyz31)){
+    dvals[i] <- abs(A*x31[i] + B*y31[i] + C)/sqrt(A^2 + B^2)
+  }
+
+  if(is.nan(min(dvals))){
+    stop("Input chromaticity is the white point!")
+  }
+
+  mind.idx <- which(dvals==min(dvals))
+  #print(dvals)
+  #print(min(dvals))
+  lambda.hue <- ciexyz31[mind.idx,1]
+  xh <- x31[mind.idx]
+  yh <- y31[mind.idx]
+
+  return(c(lambda.hue, xh, yh))
+}
 
 # Gamma correction for sRGB
 gamma.sRGB <- function(RGB.vec){

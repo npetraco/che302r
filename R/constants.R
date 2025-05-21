@@ -1,3 +1,4 @@
+#--------------------------------------------
 #' @title Constants
 #'
 #' @description Constants available
@@ -15,8 +16,10 @@
 #' mP     mass of proton, kg
 #' mN     mass of neutron, kg
 #' ec     charge of electron, Coulombs
-#' RH     Rydberg constant, wavenumbers cm^-1
-#' RHJ    Rydberg constant, Joules
+#' RH     Rydberg constant for hydrogen atom, wavenumbers cm^-1
+#' RHJ    Rydberg constant for hydrogen atom, Joules
+#' Rinf   Rydberg constant clamped nucleus, wavenumbers cm^-1
+#' RinfJ  Rydberg constant clamped nucleus, Joules
 #' alphaf Fine structure constant, dimensionless
 #' eps0   Vacuum permittivity, Farads/m
 #' a0     Bohr radius, m
@@ -30,9 +33,11 @@
 #' auf2Hz       atomic units frequency to Hz, Unit= s^-1
 #' lambdaFw2icm atomic units mass weighted Fw eigenvalues to nu-tilde = omega/(2*pi*c), Unit = cm^-1
 #' lambdaF2icm  Conversion factor from sqrt(hartree/amu-bohr^2) to cm^-1
+#--------------------------------------------
 constants <- function(){
   print("See: ?constants")
 }
+
 h      <- 6.62607015e-34           # Planck's const NIST, Js
 cl     <- 299792458                # Speed of light NIST, m/s
 kB     <- 1.380649e-23             # Boltzmann's const NIST, J/K
@@ -70,3 +75,51 @@ bohr2m       <- a0                                      # bohr to meters
 auf2Hz       <- sqrt(hartree2J * 1/(amu2kg * bohr2m^2)) # atomic units frequency to Hz, Unit= s^-1
 lambdaFw2icm <- auf2Hz/(2*pi*cl*100)                    # atomic units mass weighted Fw eigenvalues to nu-tilde = omega/(2*pi*c), Unit = cm^-1
                                                         # lambdaF2icm ---> 5140.485 # Conversion factor from sqrt(hartree/amu-bohr^2) to cm^-1
+
+#--------------------------------------------
+#' @title "Corrected" Rydberg constant for any hydrogen like atom
+#' @description "Corrected" Rydberg constant for any hydrogen like atom
+#'
+#' @param at.mass   atomic nucleus' mass
+#' @param mass.unit "amu" or "kg"
+#' @param en.unit   Rydberg constant unit desired: "cm-1" (inverse centimeters), "m-1" (inverse meters) or J ("Joules)
+#'
+#' @details The Rinf (or RinfJ) Rydberg constant assumes the center of mass for an nucleus-electron system is
+#' directly at the nucleus (i.e. nucleus is clamped). To correct for this multiply by mu = me*mnuc/(me+mnuc)
+#' and divide by me.
+#'
+#' @return The corrected hydrogen-like atom Rydberg constant
+#'
+#' @examples
+#' RydM(mP, mass.unit = "kg", en.unit = "cm-1")
+#' RH
+#'
+#' RydM(1, mass.unit = "amu", en.unit = "cm-1")
+#' RH # a tad different because 1 amu != mP or mN
+#'
+#' RydM(2*mP+2*mN, mass.unit = "kg", en.unit = "cm-1") # Rydberg for Helium-4 +1 ion
+#--------------------------------------------
+RydM <- function(at.mass, mass.unit="amu", en.unit="cm-1"){
+
+  if(mass.unit == "amu"){
+    avg.nuc.mass.kg <- at.mass * amu2kg # For amu masses assume average isotope mass in kg and convert using amu2kg
+    mu.at <- avg.nuc.mass.kg*me/(avg.nuc.mass.kg + me)
+  } else if(mass.unit =="kg"){
+    mu.at <- at.mass*me/(at.mass + me)
+  } else {
+    stop("mass.unit must be amu or kg!")
+  }
+
+  if(en.unit == "m-1"){ # Unit here is m^-1
+    val <- mu.at/me*Rinf
+  } else if(en.unit == "cm-1") { # Unit here is cm^-1
+    val <- mu.at/me*(Rinf/100)
+  } else if(en.unit == "J") { # Unit here is J
+    val <- mu.at/me*RinfJ
+  } else {
+    stop("en.unit must be cm-1, m-1 or J")
+  }
+
+  return(val)
+
+}

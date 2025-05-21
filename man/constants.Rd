@@ -14,8 +14,10 @@ me     mass of electron, kg
 mP     mass of proton, kg
 mN     mass of neutron, kg
 ec     charge of electron, Coulombs
-RH     Rydberg constant, wavenumbers cm^-1
-RHJ    Rydberg constant, Joules
+RH     Rydberg constant for hydrogen atom, wavenumbers cm^-1
+RHJ    Rydberg constant for hydrogen atom, Joules
+Rinf   Rydberg constant clamped nucleus, wavenumbers cm^-1
+RinfJ  Rydberg constant clamped nucleus, Joules
 alphaf Fine structure constant, dimensionless
 eps0   Vacuum permittivity, Farads/m
 a0     Bohr radius, m
