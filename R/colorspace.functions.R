@@ -120,7 +120,7 @@ color_partition <- function(wavelength) {
 # rep("orange",4) #580-595
 rough.spec.vec <- c(rep("purple",8),rep("blue",13),rep("green",13),rep("yellow",4),rep("orange",4),rep("red",27))
 
-#normalized xyz chromaticity coordinates. NOTE: needs library(colorspace)
+#normalized xy chromaticity coordinates. NOTE: needs library(colorspace)
 x31 <- ciexyz31[,2]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
 y31 <- ciexyz31[,3]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
 
@@ -142,7 +142,12 @@ color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
 
   if(printQ==T){
     print(paste0("Comparing to lambda: ", hue.lambda))
-    print(paste0("Purity (saturation): ", val))
+    print(paste0("Lambda is a:         ", color_partition(hue.lambda)))
+    if(percentQ==T){
+      print(paste0("Purity (saturation): ", round(val, 1), "%"))
+    } else {
+      print(paste0("Purity (saturation): ", round(val, 1)))
+    }
   }
 
   return(val)
@@ -155,33 +160,33 @@ color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
 # default.
 compute_hue <- function(xc, yc, xw=0.31, yw=0.33){
 
-  m <- (yc - yw)/(xc-xw) # slope of line between xc,yc and xw,yw
-  b <- (yw-m*xw)         # intercept of line between xc,yc and xw,yw
+  # defs.
+  # chromaticity vec: vector from white point to (xc,yc) chromaticity value
+  # spectral vec: vector from white point to a point on the spectral locus (edge of the gamut)
 
-  # Standard form coefs, just for a little more readability:
-  A <- m
-  B <- -1
-  C <- b
+  cxy <- c(xc,yc)
+  wp  <- c(xw,yw)
+  rxy <- cxy - wp
 
-  # Compute the distance between the line and every point on the gamut convex hull:
-  dvals <- rep(-1, nrow(ciexyz31))
+  angs <- rep(0, nrow(ciexyz31))
+  prjs <- rep(0, nrow(ciexyz31))
   for(i in 1:nrow(ciexyz31)){
-    dvals[i] <- abs(A*x31[i] + B*y31[i] + C)/sqrt(A^2 + B^2)
+    rs      <- c(x31[i],y31[i]) - wp
+    prjs[i] <- rxy%*%rs/sqrt(sum(rs^2))                # projection of chromaticity vec onto spectral vec
+    angs[i] <- acos(prjs[i]/sqrt(sum(rxy^2))) * 180/pi # compute angle between chromaticity vec and spectral vec
   }
 
-  if(is.nan(min(dvals))){
-    stop("Input chromaticity is the white point!")
-  }
+  #print(cbind(x31,y31,prjs,angs))
+  #return(cbind(x31,y31,prjs,angs))
 
-  mind.idx <- which(dvals==min(dvals))
-  #print(dvals)
-  #print(min(dvals))
+  mind.idx   <- which(angs==min(angs)) # Choose the point that makes the smallest angle with the chromaticity vector. NOTE: the chosen point lies on the spectral vector that makes the smallest angle with the chromaticity vector
   lambda.hue <- ciexyz31[mind.idx,1]
-  xh <- x31[mind.idx]
-  yh <- y31[mind.idx]
+  xh         <- x31[mind.idx]
+  yh         <- y31[mind.idx]
 
   return(c(lambda.hue, xh, yh))
 }
+
 
 # Gamma correction for sRGB
 gamma.sRGB <- function(RGB.vec){
@@ -253,6 +258,158 @@ vec2hex <- function(a.vec){
 
   return(a.vec.hex)
 }
+
+
+#----------------------------------------------------------------
+#' @title Euclidean distance
+#' @description Euclidean distance in a plane
+#'
+#' @param vec1 a vector
+#' @param vec2 a vector
+#'
+#' @details Euclidean distance in a plane
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+ed <- function(vec1, vec2){
+  return(sqrt(sum((vec1 - vec2)^2)))
+}
+
+
+#----------------------------------------------------------------
+#' @title Magnitude of a vector
+#' @description Magnitude of a vector
+#'
+#' @param vec1 a vector
+#' @param vec2
+#'
+#' @details Magnitude of a vector. Handy for working in the gamut
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+magv <- function(vec1){
+  return(sqrt(sum(vec1^2)))
+}
+
+
+#----------------------------------------------------------------
+#' @title Scalar projection of vector 1 on to vector 2
+#' @description Scalar projection of vector 1 on to vector 2
+#'
+#' @param vec1 vector 1
+#' @param vec2 vector 2
+#'
+#' @details Scalar projection of vector 1 on to vector 2. Usually vector 1 is the
+#' shorter of the two vectors, and vector 2 is the longer.
+#' Handy for working in the gamut.
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+prjv <- function(vec1,vec2){
+  return(vec1%*%vec2/magv(vec2))
+}
+
+
+#----------------------------------------------------------------
+#' @title Angle between two vectors
+#' @description Angle between two vectors
+#'
+#' @param vec1 vector 1
+#' @param vec2 vector 2
+#'
+#' @details Angle between two vectors. Handy for working in the gamut
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+angv <- function(vec1,vec2,type="deg"){
+
+  theta <- acos( prjv(vec1,vec2)/magv(vec1) )
+  if(type=="deg"){
+    theta <-  theta * 180/pi
+  }
+
+  return(theta)
+}
+
+
+#----------------------------------------------------------------
+#' @title Area for a triangle by 3x3 determinant of vertices
+#' @description Area for a triangle by 3x3 determinant of vertices
+#'
+#' @param vtx1 vertex 1
+#' @param vtx2 vertex 2
+#' @param vtx3 vertex 3
+#'
+#' @details Area for a triangle by 3x3 determinant of vertices.
+#' Handy for testing if chromaticity point is in purple region.
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+tria <- function(vtx1, vtx2, vtx3){
+
+  tmat <- rbind(
+    c(vtx1,1),
+    c(vtx2,1),
+    c(vtx3,1)
+  )
+
+  tarea <- abs(0.5*det(tmat))
+
+  return(tarea)
+}
+
+
+#----------------------------------------------------------------
+#' @title Test to see if a point in the gamut is in the purple region
+#' @description Test to see if a point in the gamut is in the purple region
+#'
+#' @param cp                  Chromaticity point in the gamut
+#' @param white.point         A white point. Default is D65
+#' @param left.purple.vertex  A left purple vertex. Default is the one in ciexyz31
+#' @param right.purple.vertex A right purple vertex. Default is the one in ciexyz31
+#'
+#' @details Test to see if a point in the gamut is in the purple region. The purple
+#' region is a convex hull.
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+purpleQ <- function(cp, white.point=c(0.31,0.33), left.purple.vertex=c(0.175560232,0.005293837), right.purple.vertex=c(0.73469,0.26531), tol=1e-5){
+
+  # Calculate area of the whole purple region triangle: lp-wp-rp
+  AA <- tria(left.purple.vertex, white.point, right.purple.vertex)
+
+  # Area of triangle: cp-wp-lp
+  BB <- tria(cp, white.point, left.purple.vertex)
+
+  # Area of triangle: cp-lp-rp
+  CC <- tria(cp, left.purple.vertex, right.purple.vertex)
+
+  # Area of triangle: cp-wp-rp
+  DD <- tria(cp, white.point, right.purple.vertex)
+
+  # If the area of the whole triangle is the sum of the areas of the partitions (to tol),
+  # then cp is in the purple region.
+  if (abs(BB+CC+DD - AA) < tol) {
+    inpurplesQ <- TRUE
+  } else {
+    inpurplesQ <- FALSE
+  }
+
+  return(inpurplesQ)
+}
+
 
 # Hand convert to sRGB:
 XYZ2sRGB <- function(XYZ.vec){
@@ -422,5 +579,130 @@ XYZ2P3 <- function(XYZ.vec){
   names(RGB.info)  <- c("RGB","hex")
 
   return(RGB.info)
+
+}
+
+
+#----------------------------------------------------------------
+#' @title Plot a color with specified chromaticity and brightness values
+#' @description Plot a color with specified chromaticity and brightness values
+#'
+#' @param xyY.vex an x, y, Y color specification
+#' @param type    subgamut to use: Adobe, sRGB or P3
+#'
+#' @details Plot a color with specified chromaticity and brightness values
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+xyY_swatch <- function(xyY.vec, type="Adobe"){
+
+  x.loc <- xyY.vec[1]
+  y.loc <- xyY.vec[2]
+  Y.loc <- xyY.vec[3]
+
+  X.loc <- x.loc*Y.loc/y.loc
+  Z.loc <- (1-x.loc-y.loc)*Y.loc/y.loc
+
+  if(type=="Adobe"){
+    hex.cod <- XYZ2Adobe(c(X.loc, Y.loc, Z.loc))$hex
+  } else if(type=="sRGB") {
+    hex.cod <- XYZ2sRGB(c(X.loc, Y.loc, Z.loc))$hex
+  } else if(type=="P3") {
+    hex.cod <- XYZ2P3(c(X.loc, Y.loc, Z.loc))$hex
+  } else {
+    stop("type must be Adobe, sRGB or P3")
+  }
+
+  plot(1, pch=16, cex=16, col=hex.cod)
+
+  return(hex.cod) # return it if we want to use it somewhere else
+
+}
+
+
+# XYZ2xyY from colorscience package. I have it in this library because the version
+# in colorscience seemed to have a slight bug. See code below for the modification made here.
+XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = get("XYZperfectreflectingdiffuser", envir = environment())) {
+
+  if (!is.matrix(XYZmatrix)) {
+    XYZmatrix <- matrix(XYZmatrix, ncol = 3, byrow = TRUE)
+  }
+
+  Den <- rowSums(XYZmatrix)
+  DenG0 <- which(Den > 0)
+
+  xyYmatrix <- XYZmatrix
+  #xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den       # BUG?: Original line in colorscience. If some rows are thrown out because some denominators (Den) are 0, then XYZmatrix[DenG0, 1:2] and Den will have a different number of rows.
+  xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den[DenG0] # FIX
+  xyYmatrix[DenG0, 3] <- XYZmatrix[DenG0, 2]*100            # Cosmetic change: Use percent scale for Ys
+
+  R <- RefWhite[which(RefWhite[["Illuminant"]] == illuminant),]
+  Rx <- unlist(R[paste("X", observer, sep = "")])
+  Ry <- unlist(R[paste("Y", observer, sep = "")])
+  Rz <- unlist(R[paste("Z", observer, sep = "")])
+  x <- Rx/(Rx + Ry + Rz)
+  y <- Ry/(Rx + Ry + Rz)
+
+  xyYmatrix[-DenG0, 1] <- x
+  xyYmatrix[-DenG0, 2] <- y
+
+  return(xyYmatrix)
+}
+
+
+# An adequate version exists in colorscience package, so comment out for now.
+# Convenience function to convert xyY to XYZ
+# xyY2XYZ <- function(xyY.vec){
+#
+#   x.loc <- xyY.vec[1]
+#   y.loc <- xyY.vec[2]
+#   Y.loc <- xyY.vec[3]
+#
+#   X.loc <- x.loc*Y.loc/y.loc
+#   Z.loc <- (1-x.loc-y.loc)*Y.loc/y.loc
+#
+#   return(c(X.loc, Y.loc, Z.loc))
+# }
+
+
+#----------------------------------------------------------------
+#' @title Plot the outline of the gamut with and without partitions
+#' @description Plot the outline of the gamut with and without partitions
+#'
+#' @param Y.level     The brightness value (Y) to use
+#' @param partitionsQ Whether or not to show partitions between the rough hues
+#' @param white.point White point. Default is D65
+#' @param type        Color sub-gamut to use, Adobe, sRGB, P3, rough.hue, wl2c
+#'
+#' @details Plot the outline of the gamut with and without partitions
+#'
+#' @return The function will XX
+#'
+#' @export
+#----------------------------------------------------------------
+plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="Adobe"){
+
+  if(type=="Adobe") {
+    col.vec <- sapply(1:nrow(ciexyz31), function(xx){XYZ2Adobe(xyY2XYZ(c(x31[xx], y31[xx], Y.level)))$hex})
+  } else if(type=="sRGB") {
+    col.vec <- sapply(1:nrow(ciexyz31), function(xx){XYZ2sRGB(xyY2XYZ(c(x31[xx], y31[xx], Y.level)))$hex})
+  } else if(type=="P3") {
+    col.vec <- sapply(1:nrow(ciexyz31), function(xx){XYZ2P3(xyY2XYZ(c(x31[xx], y31[xx], Y.level)))$hex})
+  } else if(type=="rough.hue") {
+    col.vec <- sapply(1:nrow(ciexyz31), function(xx){color_partition(wavelength = ciexyz31[xx,1])})
+  } else if(type=="wl2c") {
+    col.vec <- sapply(1:nrow(ciexyz31), function(xx){wavelengthToColor(wavelength = ciexyz31[xx,1])})
+  } else {
+    stop("type must be Adobe, sRGB, P3, rough.hue, wl2c")
+  }
+
+  col.info.dat <- data.frame(ciexyz31[,1:3], as.character(col.vec))
+  colnames(col.info.dat) <- c("wlnm","xbar","ybar","col")
+
+
+
+  return(col.info.dat)
 
 }
