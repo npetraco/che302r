@@ -4,7 +4,7 @@
 \alias{plot_spectral_locus}
 \title{Plot the outline of the gamut with and without partitions}
 \usage{
-plot_spectral_locus(Y.level, white.point = c(0.31, 0.33), type = "Adobe")
+plot_spectral_locus(Y.level, white.point = c(0.31, 0.33), type = "sRGB")
 }
 \arguments{
 \item{Y.level}{The brightness value (Y) to use}

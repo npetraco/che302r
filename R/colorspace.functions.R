@@ -5,7 +5,8 @@
 #' @param wavelength a wavelength in nm
 #'
 #' @details This is a function takes wavelength in nm and returns an rgb-alpha value in hex.
-#' From: http://www.physics.sfasu.edu/astro/color/spectra.html converted to R.
+#' From: http://www.physics.sfasu.edu/astro/color/spectra.html converted to R. I think this
+#' guy may have written the original code however: https://earlglynn.github.io/
 #'
 #' @return A hexcode for an RGB color
 #'
@@ -46,7 +47,7 @@ wavelengthToColor <- function(wavelength) {
     B <- 0
   }
 
-  # intensty is lower at the edges of the visible spectrum.
+  # intensity is lower at the edges of the visible spectrum.
   if (wl > 780 || wl < 380) {
     alpha <- 0
   } else if (wl > 700) {
@@ -414,13 +415,15 @@ purpleQ <- function(cp, white.point=c(0.31,0.33), left.purple.vertex=c(0.1755602
 # Hand convert to sRGB:
 XYZ2sRGB <- function(XYZ.vec){
 
+  XYZ.vec.loc <- as.numeric(XYZ.vec)
+
   T.XYZ2RGB <- rbind(
     c( 3.2406, -1.5372, -0.4986),
     c(-0.9689,  1.8758,  0.0415),
     c( 0.0557, -0.2040,  1.0570)
   )
 
-  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec)
+  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec.loc)
   #print("Step1")
   #print(RGB.vec)
 
@@ -474,13 +477,15 @@ XYZ2sRGB <- function(XYZ.vec){
 # Hand convert to AdobeRGB:
 XYZ2Adobe <- function(XYZ.vec){
 
+  XYZ.vec.loc <- as.numeric(XYZ.vec)
+
   T.XYZ2RGB <- rbind(
     c( 2.0413690, -0.5649464, -0.3446944),
     c(-0.9692660,  1.8760108,  0.0415560),
     c( 0.0134474, -0.1183897,  1.0154096)
   )
 
-  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec)
+  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec.loc)
 
   # gamma correction:
   RGB.vec <- gamma.AdobeRGB(RGB.vec)
@@ -530,13 +535,15 @@ XYZ2Adobe <- function(XYZ.vec){
 # Hand convert to DCI-P3 Display:
 XYZ2P3 <- function(XYZ.vec){
 
+  XYZ.vec.loc <- as.numeric(XYZ.vec)
+
   T.XYZ2RGB <- rbind(
     c( 2.49349691, -0.93138362, -0.40271078),
     c(-0.82948897,  1.76266406,  0.02362469),
     c( 0.03584583, -0.07617239,  0.95688452)
   )
 
-  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec)
+  RGB.vec <- as.vector(T.XYZ2RGB %*% XYZ.vec.loc)
 
   # gamma correction:
   RGB.vec <- gamma.P3RGB(RGB.vec)
@@ -622,8 +629,8 @@ xyY_swatch <- function(xyY.vec, type="Adobe"){
 }
 
 
-# XYZ2xyY from colorscience package. I have it in this library because the version
-# in colorscience seemed to have a slight bug. See code below for the modification made here.
+# XYZ2xyY code from colorscience package. I have it in this library because the version
+# in colorscience seemed to have a slight bug for certain cases. See code below for the modification made here.
 XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = get("XYZperfectreflectingdiffuser", envir = environment())) {
 
   if (!is.matrix(XYZmatrix)) {
@@ -634,9 +641,9 @@ XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = 
   DenG0 <- which(Den > 0)
 
   xyYmatrix <- XYZmatrix
-  #xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den       # BUG?: Original line in colorscience. If some rows are thrown out because some denominators (Den) are 0, then XYZmatrix[DenG0, 1:2] and Den will have a different number of rows.
+  #xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den       # BUG?: Original line in colorscience. If some rows in XYZmatrix[DenG0, 1:2] are thrown out because some denominators (Den) are 0, then XYZmatrix[DenG0, 1:2] and Den will have a different number of rows.
   xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den[DenG0] # FIX
-  xyYmatrix[DenG0, 3] <- XYZmatrix[DenG0, 2]*100            # Cosmetic change: Use percent scale for Ys
+  xyYmatrix[DenG0, 3]   <- XYZmatrix[DenG0, 2]*100            # Another change; but just cosmetic: Use percent scale for Ys
 
   R <- RefWhite[which(RefWhite[["Illuminant"]] == illuminant),]
   Rx <- unlist(R[paste("X", observer, sep = "")])
@@ -654,17 +661,17 @@ XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = 
 
 # An adequate version exists in colorscience package, so comment out for now.
 # Convenience function to convert xyY to XYZ
-# xyY2XYZ <- function(xyY.vec){
-#
-#   x.loc <- xyY.vec[1]
-#   y.loc <- xyY.vec[2]
-#   Y.loc <- xyY.vec[3]
-#
-#   X.loc <- x.loc*Y.loc/y.loc
-#   Z.loc <- (1-x.loc-y.loc)*Y.loc/y.loc
-#
-#   return(c(X.loc, Y.loc, Z.loc))
-# }
+xyY2XYZ2 <- function(xyY.vec){
+
+  x.loc <- xyY.vec[1]
+  y.loc <- xyY.vec[2]
+  Y.loc <- xyY.vec[3]
+
+  X.loc <- x.loc*Y.loc/y.loc
+  Z.loc <- (1-x.loc-y.loc)*Y.loc/y.loc
+
+  return(c(X.loc, Y.loc, Z.loc))
+}
 
 
 #----------------------------------------------------------------
@@ -682,7 +689,7 @@ XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = 
 #'
 #' @export
 #----------------------------------------------------------------
-plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="Adobe"){
+plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="sRGB"){
 
   if(type=="Adobe") {
     col.vec <- sapply(1:nrow(ciexyz31), function(xx){XYZ2Adobe(xyY2XYZ(c(x31[xx], y31[xx], Y.level)))$hex})
@@ -698,11 +705,52 @@ plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="Adobe")
     stop("type must be Adobe, sRGB, P3, rough.hue, wl2c")
   }
 
-  col.info.dat <- data.frame(ciexyz31[,1:3], as.character(col.vec))
-  colnames(col.info.dat) <- c("wlnm","xbar","ybar","col")
+  # hue of each chromaticity on the spectral locus:
+  col.nms <- sapply(1:length(cccie31[,1]), function(x){color_partition(cccie31[x,1])})
+
+  #col.info.mat <- data.frame(ciexyz31[,1:3], as.character(col.vec))
+  #colnames(col.info.mat) <- c("wlnm","xbar","ybar","col")
+  #print(col.info.mat)
+
+  col.info.mat <- data.frame(cccie31[,1], col.nms, col.vec, x31, y31)
+  colnames(col.info.mat) <- c("lambda", "hue.partition", "color.code", "x", "y")
+  #print(col.info.mat)
 
 
+  # Identify the wavelengths and chromaticities where the main spectral colors are partitioned:
+  # cf. color_partition() for our (rather arbitrary but why not) partition
+  col.chunks      <- c("red", "orange", "yellow", "green", "blue", "violet") # ROYGBV
+  col.partion.mat <- NULL
+  for(i in 1:length(col.chunks)){
+    col.hue          <- col.chunks[i]
+    col.hue.idxs     <- which(col.info.mat[,2] == col.hue)
+    sub.col.info.mat <- col.info.mat[col.hue.idxs,] # Pull out the wl span covering the hue
+    col.bottom       <- sub.col.info.mat[1,]        # Bottom of the wl span (i.e. higher energy side)
+    #col.top          <- sub.col.info.mat[nrow(sub.col.info.mat),]
+    col.partion.mat  <- rbind(col.partion.mat, col.bottom)
+  }
+  #print(col.partion.mat)
 
-  return(col.info.dat)
+  # For line of purples:
+  purples.left       <- col.info.mat[1,]
+  purples.right      <- col.info.mat[nrow(col.info.mat),]
+  purples.left[2:3]  <- c("purple","#6C3082")  # Call "#6C3082"  purple
+  purples.right[2:3] <- c("purple","#6C3082")
+  col.partion.mat    <- rbind(col.partion.mat, purples.left, purples.right)
+  print(col.partion.mat)
+
+  plot(x31, y31, col=col.vec, pch=16, xlab="x", ylab="y", main="The Great Gamut")
+  # Working our way around counter-clockwise:
+  lines(c(white.point[1],col.partion.mat[8,4]), c(white.point[2],col.partion.mat[8,5]), col=col.partion.mat[8,2], lwd=3) # designated right purple bound
+  lines(c(white.point[1],col.partion.mat[1,4]), c(white.point[2],col.partion.mat[1,5]), col=col.partion.mat[1,2], lwd=3) # designated red bound
+  lines(c(white.point[1],col.partion.mat[2,4]), c(white.point[2],col.partion.mat[2,5]), col=col.partion.mat[2,2], lwd=3) # designated orange bound
+  lines(c(white.point[1],col.partion.mat[3,4]), c(white.point[2],col.partion.mat[3,5]), col=col.partion.mat[3,2], lwd=3) # designated yellow bound
+  lines(c(white.point[1],col.partion.mat[4,4]), c(white.point[2],col.partion.mat[4,5]), col=col.partion.mat[4,2], lwd=3) # designated green bound
+  lines(c(white.point[1],col.partion.mat[5,4]), c(white.point[2],col.partion.mat[5,5]), col=col.partion.mat[5,2], lwd=3) # designated blue bound
+  lines(c(white.point[1],col.partion.mat[6,4]), c(white.point[2],col.partion.mat[6,5]), col=col.partion.mat[6,2], lwd=3) # designated violet bound
+  lines(c(white.point[1],col.partion.mat[7,4]), c(white.point[2],col.partion.mat[7,5]), col=col.partion.mat[7,2], lwd=3) # designated left purple bound
+  lines(c(col.partion.mat[7,4],col.partion.mat[8,4]), c(col.partion.mat[7,5],col.partion.mat[8,5]), col=col.partion.mat[7,2], lwd=3) # line of purples
+
+  #return(col.info.dat)
 
 }

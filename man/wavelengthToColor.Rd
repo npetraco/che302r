@@ -17,7 +17,8 @@ This is a function takes wavelength in nm and returns an rgb-alpha value in hex.
 }
 \details{
 This is a function takes wavelength in nm and returns an rgb-alpha value in hex.
-From: http://www.physics.sfasu.edu/astro/color/spectra.html converted to R.
+From: http://www.physics.sfasu.edu/astro/color/spectra.html converted to R. I think this
+guy may have written the original code however: https://earlglynn.github.io/
 }
 \examples{
 wavelengthToColor(536)
