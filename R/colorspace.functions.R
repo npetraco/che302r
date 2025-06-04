@@ -1,4 +1,101 @@
 #--------------------------------------------
+# Quick reference for normalized xy-chromaticity CIE 1931 coordinates in the colorspace library.
+# NOTE: needs library(colorspace)
+# NOTE: XXXXXX in data
+#--------------------------------------------
+x31 <- ciexyz31[,2]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
+y31 <- ciexyz31[,3]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
+
+
+#--------------------------------------------
+# Spline together CIE 1931 cmf data together so we can use them as function if needed
+#--------------------------------------------
+xbar.sf <- splinefun(ciexyz31$wlnm, ciexyz31$xbar)
+ybar.sf <- splinefun(ciexyz31$wlnm, ciexyz31$ybar)
+zbar.sf <- splinefun(ciexyz31$wlnm, ciexyz31$zbar)
+
+
+
+#----------------------------------------------------------------
+#' @title Generate spectral locus data
+#' @description XX
+#'
+#' @param xch XX
+#' @param ych XX
+#' @param lambda XX
+#'
+#' @details XX
+#'
+#' @return The function will XX
+#'
+#----------------------------------------------------------------
+make.spectral.locus <- function(delta.lambda=1, num.lambda=NULL, lambda.start=380, lambda.stop=780){
+
+  if(is.null(num.lambda)){
+    lambda.loc <- seq(from=lambda.start, to=lambda.stop, by=delta.lambda)
+  } else {
+    lambda.loc <- seq(from=lambda.start, to=lambda.stop, length.out=num.lambda)
+  }
+
+
+  x.spectral.locus <- xbar.sf(lambda.loc)/(xbar.sf(lambda.loc) + ybar.sf(lambda.loc) + zbar.sf(lambda.loc))
+  y.spectral.locus <- ybar.sf(lambda.loc)/(xbar.sf(lambda.loc) + ybar.sf(lambda.loc) + zbar.sf(lambda.loc))
+  #plot(x.sl, y.sl)
+
+  spectral.locus.mat <- cbind(lambda.loc, x.spectral.locus, y.spectral.locus)
+  colnames(spectral.locus.mat) <- c("lambda", "x", "y")
+
+  return(spectral.locus.mat)
+
+}
+
+
+#----------------------------------------------------------------
+#' @title Generate alychne data or line
+#' @description XX
+#'
+#' @param lambda.left XX
+#' @param lambda.right XX
+#' @param type XX
+#' @param num.pts XX
+#'
+#' @details XX
+#'
+#' @return The function will XX
+#'
+#----------------------------------------------------------------
+make.alychne <- function(lambda.left=380, lambda.right=780, type="data", num.pts=1000){
+
+  # Left most requested chromaticity point on the alychne
+  x.ch.left <- xbar.sf(lambda.left)/(xbar.sf(lambda.left) + ybar.sf(lambda.left) + zbar.sf(lambda.left))
+  y.ch.left <- ybar.sf(lambda.left)/(xbar.sf(lambda.left) + ybar.sf(lambda.left) + zbar.sf(lambda.left))
+
+  # Right most requested chromaticity point on the alychne
+  x.ch.right <- xbar.sf(lambda.right)/(xbar.sf(lambda.right) + ybar.sf(lambda.right) + zbar.sf(lambda.right))
+  y.ch.right <- ybar.sf(lambda.right)/(xbar.sf(lambda.right) + ybar.sf(lambda.right) + zbar.sf(lambda.right))
+
+  m.alychne <- (y.ch.right - y.ch.left)/(x.ch.right-x.ch.left) # alychne slope
+  b.alychne <- (y.ch.left-m.alychne*x.ch.left)                         # alychne intercept
+
+  if(type=="data") {
+    x.alychne    <- seq(from=x.ch.left, to=x.ch.right, length.out=num.pts)
+    y.alychne    <- m.alychne*x.alychne + b.alychne
+    alychne.info <- cbind(x.alychne, y.alychne)
+    colnames(alychne.info) <- c("x","y")
+
+  } else if(type=="line") {
+    alychne.info <- c(m.alychne, b.alychne)
+    names(alychne.info) <- c("m", "b")
+  } else {
+    stop("type must be data or line")
+  }
+
+  return(alychne.info)
+
+}
+
+
+#--------------------------------------------
 #' @title wavelengthToColor.
 #' @description This is a function takes wavelength in nm and returns an rgb-alpha value in hex.
 #'
@@ -112,22 +209,23 @@ color_partition <- function(wavelength) {
 }
 
 
-#A rough visible spectrum vector:
-# wl<-seq(390,730,5)
-# rep("purple",18) #390-475
-# rep("blue",3) #480-490
-# rep("green",13) #495-555
-# rep("yellow",4) #560-575
-# rep("orange",4) #580-595
-rough.spec.vec <- c(rep("purple",8),rep("blue",13),rep("green",13),rep("yellow",4),rep("orange",4),rep("red",27))
-
-#normalized xy chromaticity coordinates. NOTE: needs library(colorspace)
-x31 <- ciexyz31[,2]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
-y31 <- ciexyz31[,3]/(ciexyz31[,2]+ciexyz31[,3]+ciexyz31[,4])
-
-
-# Compute "purity" of a point in xy-chromaticity space (i.e. it's "closeness"
-# to the locus convex hull wrt/ a chosen whit point). Assumes as default D65 white point.
+#--------------------------------------------
+#' @title Compute "purity" of a point in xy-chromaticity space
+#' @description Compute "purity" of a point in xy-chromaticity space
+#'
+#' @param xc x-chromaticity
+#' @param yc y-chromaticity
+#' @param xw x-white point. Default is D65 xw=0.31
+#' @param yw y-white point. Default is D65 yw=0.33
+#' @param percentQ Compute as a percent?
+#' @param printQ   Print more info?
+#'
+#' @details Compute "purity" of a point in xy-chromaticity space  (i.e. "closeness)
+#' to the locus convex hull wrt/ a chosen whit point). Assumes as default D65 white point.
+#'
+#' @return A chromaticity's purity with respect to the white point
+#'
+#--------------------------------------------
 color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
 
   # Compute the nearest point on the gamut convex hull to xc, yc wrt/ the white point:
@@ -156,12 +254,25 @@ color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
 }
 
 
-# Compute the approximate closest point on the convex hull of the gamut to
-# chromaticity coords xc, yc wrt white point xw, yw. D65 white point is the
-# default.
+#--------------------------------------------
+#' @title Compute hue
+#' @description Compute hue
+#'
+#' @param xc x-chromaticity
+#' @param yc y-chromaticity
+#' @param xw x-white point. Default is D65 xw=0.31
+#' @param yw y-white point. Default is D65 yw=0.33
+#'
+#' @details Compute the approximate closest point on the convex hull of the gamut to
+#' chromaticity coords xc, yc wrt white point xw, yw. D65 white point is the
+#' default.
+#'
+#' @return A chromaticity's purity with respect to the white point
+#'
+#--------------------------------------------
 compute_hue <- function(xc, yc, xw=0.31, yw=0.33){
 
-  # defs.
+  # defs:
   # chromaticity vec: vector from white point to (xc,yc) chromaticity value
   # spectral vec: vector from white point to a point on the spectral locus (edge of the gamut)
 
@@ -185,7 +296,10 @@ compute_hue <- function(xc, yc, xw=0.31, yw=0.33){
   xh         <- x31[mind.idx]
   yh         <- y31[mind.idx]
 
-  return(c(lambda.hue, xh, yh))
+  hue.info        <- c(lambda.hue, xh, yh)
+  names(hue.info) <- c("lambda", "x", "y")
+
+  return(hue.info)
 }
 
 
@@ -383,8 +497,6 @@ tria <- function(vtx1, vtx2, vtx3){
 #' region is a convex hull.
 #'
 #' @return The function will XX
-#'
-#' @export
 #----------------------------------------------------------------
 purpleQ <- function(cp, white.point=c(0.31,0.33), left.purple.vertex=c(0.175560232,0.005293837), right.purple.vertex=c(0.73469,0.26531), tol=1e-5){
 
@@ -643,7 +755,7 @@ XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = 
   xyYmatrix <- XYZmatrix
   #xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den       # BUG?: Original line in colorscience. If some rows in XYZmatrix[DenG0, 1:2] are thrown out because some denominators (Den) are 0, then XYZmatrix[DenG0, 1:2] and Den will have a different number of rows.
   xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den[DenG0] # FIX
-  xyYmatrix[DenG0, 3]   <- XYZmatrix[DenG0, 2]*100            # Another change; but just cosmetic: Use percent scale for Ys
+  xyYmatrix[DenG0, 3]   <- XYZmatrix[DenG0, 2]*100          # Another change; but just cosmetic: Use percent scale for Ys
 
   R <- RefWhite[which(RefWhite[["Illuminant"]] == illuminant),]
   Rx <- unlist(R[paste("X", observer, sep = "")])
@@ -687,7 +799,6 @@ xyY2XYZ2 <- function(xyY.vec){
 #'
 #' @return The function will XX
 #'
-#' @export
 #----------------------------------------------------------------
 plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="sRGB"){
 
@@ -739,7 +850,7 @@ plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="sRGB"){
   col.partion.mat    <- rbind(col.partion.mat, purples.left, purples.right)
   print(col.partion.mat)
 
-  plot(x31, y31, col=col.vec, pch=16, xlab="x", ylab="y", main="The Great Gamut")
+  plot(x31, y31, col=col.vec, pch=16, xlab="x", ylab="y", main="The Great Gamut", xlim=c(0,0.8))
   # Working our way around counter-clockwise:
   lines(c(white.point[1],col.partion.mat[8,4]), c(white.point[2],col.partion.mat[8,5]), col=col.partion.mat[8,2], lwd=3) # designated right purple bound
   lines(c(white.point[1],col.partion.mat[1,4]), c(white.point[2],col.partion.mat[1,5]), col=col.partion.mat[1,2], lwd=3) # designated red bound
@@ -752,5 +863,99 @@ plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="sRGB"){
   lines(c(col.partion.mat[7,4],col.partion.mat[8,4]), c(col.partion.mat[7,5],col.partion.mat[8,5]), col=col.partion.mat[7,2], lwd=3) # line of purples
 
   #return(col.info.dat)
+
+}
+
+
+
+#----------------------------------------------------------------
+#' @title xy-chromaticity and lambda lookup table
+#' @description xy-chromaticity and lambda lookup table
+#'
+#' @param xch XX
+#' @param ych XX
+#' @param lambda XX
+#'
+#' @details xy-chromaticity and lambda lookup table so we can go between xy
+#' normalized chromaticities and corresponding lambdas. Have to do this as a
+#' lookup table because the gamut is not a function and doesn't have an easy
+#' to define inverse.
+#'
+#' @return The function will XX
+#'
+#----------------------------------------------------------------
+xyl.lut <- function(xch, ych, lambda=NULL, delta.lambda=0.1, tol=0.005, printQ=F){
+
+  # If no lambda is stipulated, check anf see if input xy are on (or close enough too) the gamut convex hull.
+  # If they are return the closest xy on the hull to the input ones along with a lambda if they're spectral chromaticities.
+  if(is.null(lambda)) {
+    spectral.locus <- make.spectral.locus(delta.lambda, lambda.start = 380, lambda.stop = 830) # SHOULD THIS JUST BE A STORED DATA TABLE INSTEAD, SO WE DON'T HAVE TO REGENEATE IT EVERY TIME WE LOOK UP A LAMBDA OR XY??
+
+    dists.from.locus   <- sapply(1:nrow(spectral.locus), function(xx){ed(c(xch, ych), c(spectral.locus[xx,2], spectral.locus[xx,3]))})
+
+    min.dist <- min(dists.from.locus)
+
+    chull.info <- NULL
+
+    # First check to see if xch, ych is closer to the spectral locus or alychne.
+    # This is a little sloppy and can be done better.......
+    if(min.dist < tol){
+
+      min.idx    <- which(dists.from.locus == min.dist)
+      xslocus    <- spectral.locus[min.idx,2]
+      yslocus    <- spectral.locus[min.idx,3]
+      lamslocus  <- spectral.locus[min.idx,1]
+      chull.info <- c(xslocus, yslocus, lamslocus)
+      names(chull.info) <- c("x","y","lambda")
+
+      if(printQ==T){
+        print("On spectral locus")
+        print(paste0("Input chromaticity:            x=", xch, ", y=", ych))
+        print(paste0("Closest spectral chromaticity: x=", round(xslocus,3), ", y=", round(yslocus,3), ", lambda=", lamslocus))
+        print(paste0("Distance:                       =", min.dist))
+      }
+
+    } else { # If not on spectral locus, check to see if xch, ych is close to the alychne using the same distance tolerance:
+
+      alychne.mat        <- make.alychne(lambda.left = 380, lambda.right = 830, type = "data", num.pts = 1000) # SHOULD THIS JUST BE A STORED DATA TABLE INSTEAD, SO WE DON'T HAVE TO REGENEATE IT EVERY TIME WE LOOK UP A LAMBDA OR XY??
+      dists.from.alychne <- sapply(1:nrow(alychne.mat), function(xx){ed(c(xch, ych), c(alychne.mat[xx,1], alychne.mat[xx,2]))})
+      min.dist.aly       <- min(dists.from.alychne)
+
+      if(min.dist.aly < tol){
+
+        min.aly.idx  <- which(dists.from.alychne == min.dist.aly)
+        xaly         <- alychne.mat[min.aly.idx,1]
+        yaly         <- alychne.mat[min.aly.idx,2]
+
+        chull.info <- c(xaly, yaly, NA)
+        names(chull.info) <- c("x","y", "lambda")
+
+        if(printQ==T){
+          print("On alychne")
+          print(paste0("Input chromaticity:            x=", xch, ", y=", ych))
+          print(paste0("Closest alychne chromaticity:  x=", round(xaly,3), ", y=", round(yaly,3)))
+          print(paste0("Distance:                       =", min.dist.aly))
+        }
+
+      } else {
+
+        min.aly.idx  <- which(dists.from.alychne == min.dist.aly)
+        print("Chromaticity not on spectral locus or alychne!")
+        print(paste0(xch, " ", ych))
+        print(paste0(round(alychne.mat[min.aly.idx,1], 3), " ", round(alychne.mat[min.aly.idx,2], 3) ))
+      }
+
+    }
+
+  } else { # If a lambda is stipulated compute corresponding spectral xy and ignore input xy if they're there:
+
+    xslocus           <- xbar.sf(lambda)/(xbar.sf(lambda) + ybar.sf(lambda) + zbar.sf(lambda))
+    yslocus           <- ybar.sf(lambda)/(xbar.sf(lambda) + ybar.sf(lambda) + zbar.sf(lambda))
+    chull.info        <- c(xslocus, yslocus, lambda)
+    names(chull.info) <- c("x","y","lambda")
+
+  }
+
+  return(chull.info)
 
 }
