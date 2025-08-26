@@ -8,7 +8,7 @@ Description: Handy functions for CHEM 302, Physical Chemistry II
     These are a collection of useful functions to help with labratories for CHEM 302.
 License: GNU GPLv3
 Encoding: UTF-8
-Depends: orthopolynom (>= 1.0-5), colorscience (>= 1.0)
-#Imports: rgl (>= 0.107.10), doMC (>= 1.3.7), doSNOW (>= 1.0.19), readJDX (>= 0.6.1), colorspace (>= 2.0-3)
+Depends: orthopolynom (>= 1.0-5)
+#Imports: rgl (>= 0.107.10), doMC (>= 1.3.7), doSNOW (>= 1.0.19)
 LazyData: true
 RoxygenNote: 7.2.2

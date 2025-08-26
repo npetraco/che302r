@@ -741,34 +741,34 @@ xyY_swatch <- function(xyY.vec, type="Adobe"){
 }
 
 
-# XYZ2xyY code from colorscience package. I have it in this library because the version
-# in colorscience seemed to have a slight bug for certain cases. See code below for the modification made here.
-XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = get("XYZperfectreflectingdiffuser", envir = environment())) {
-
-  if (!is.matrix(XYZmatrix)) {
-    XYZmatrix <- matrix(XYZmatrix, ncol = 3, byrow = TRUE)
-  }
-
-  Den <- rowSums(XYZmatrix)
-  DenG0 <- which(Den > 0)
-
-  xyYmatrix <- XYZmatrix
-  #xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den       # BUG?: Original line in colorscience. If some rows in XYZmatrix[DenG0, 1:2] are thrown out because some denominators (Den) are 0, then XYZmatrix[DenG0, 1:2] and Den will have a different number of rows.
-  xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den[DenG0] # FIX
-  xyYmatrix[DenG0, 3]   <- XYZmatrix[DenG0, 2]*100          # Another change; but just cosmetic: Use percent scale for Ys
-
-  R <- RefWhite[which(RefWhite[["Illuminant"]] == illuminant),]
-  Rx <- unlist(R[paste("X", observer, sep = "")])
-  Ry <- unlist(R[paste("Y", observer, sep = "")])
-  Rz <- unlist(R[paste("Z", observer, sep = "")])
-  x <- Rx/(Rx + Ry + Rz)
-  y <- Ry/(Rx + Ry + Rz)
-
-  xyYmatrix[-DenG0, 1] <- x
-  xyYmatrix[-DenG0, 2] <- y
-
-  return(xyYmatrix)
-}
+# # XYZ2xyY code from colorscience package. I have it in this library because the version
+# # in colorscience seemed to have a slight bug for certain cases. See code below for the modification made here.
+# XYZ2xyY.cs <- function (XYZmatrix, illuminant = "D65", observer = 2, RefWhite = get("XYZperfectreflectingdiffuser", envir = environment())) {
+#
+#   if (!is.matrix(XYZmatrix)) {
+#     XYZmatrix <- matrix(XYZmatrix, ncol = 3, byrow = TRUE)
+#   }
+#
+#   Den <- rowSums(XYZmatrix)
+#   DenG0 <- which(Den > 0)
+#
+#   xyYmatrix <- XYZmatrix
+#   #xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den       # BUG?: Original line in colorscience. If some rows in XYZmatrix[DenG0, 1:2] are thrown out because some denominators (Den) are 0, then XYZmatrix[DenG0, 1:2] and Den will have a different number of rows.
+#   xyYmatrix[DenG0, 1:2] <- XYZmatrix[DenG0, 1:2]/Den[DenG0] # FIX
+#   xyYmatrix[DenG0, 3]   <- XYZmatrix[DenG0, 2]*100          # Another change; but just cosmetic: Use percent scale for Ys
+#
+#   R <- RefWhite[which(RefWhite[["Illuminant"]] == illuminant),]
+#   Rx <- unlist(R[paste("X", observer, sep = "")])
+#   Ry <- unlist(R[paste("Y", observer, sep = "")])
+#   Rz <- unlist(R[paste("Z", observer, sep = "")])
+#   x <- Rx/(Rx + Ry + Rz)
+#   y <- Ry/(Rx + Ry + Rz)
+#
+#   xyYmatrix[-DenG0, 1] <- x
+#   xyYmatrix[-DenG0, 2] <- y
+#
+#   return(xyYmatrix)
+# }
 
 
 # An adequate version exists in colorscience package, so comment out for now.
