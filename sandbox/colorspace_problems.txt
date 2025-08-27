@@ -1,0 +1,6 @@
+# colorscience and or readJDX stuff isn't working.
+# One or some it their dependent packages are not installing correctly
+# Pulled these out of DESCRIPTION file:
+
+, colorscience (>= 1.0) # Depends
+, readJDX (>= 0.6.1), colorspace (>= 2.0-3) # Imports
