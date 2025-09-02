@@ -33,6 +33,7 @@
 #' auf2Hz       atomic units frequency to Hz, Unit= s^-1
 #' lambdaFw2icm atomic units mass weighted Fw eigenvalues to nu-tilde = omega/(2*pi*c), Unit = cm^-1
 #' lambdaF2icm  Conversion factor from sqrt(hartree/amu-bohr^2) to cm^-1
+#' @export
 #--------------------------------------------
 constants <- function(){
   print("See: ?constants")
