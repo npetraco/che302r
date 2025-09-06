@@ -2,7 +2,7 @@
 .Rproj.user
 .Rhistory
 .RData
-inst/ex_data
+inst/ext_data
 inst/script_bank
 pull
 tests
