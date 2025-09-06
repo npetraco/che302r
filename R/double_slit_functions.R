@@ -26,6 +26,7 @@
 #' I <- dsi(theta, d.slit.sep = d, a.slit.width = a, lambda = lam)
 #' plot(theta*180/pi, I, typ="l", xlab="theta (deg)")
 #'
+#' @export
 #--------------------------------------------
 dsi <- function(theta, d.slit.sep, a.slit.width, lambda, Imax=1) {
 
@@ -65,6 +66,7 @@ dsi <- function(theta, d.slit.sep, a.slit.width, lambda, Imax=1) {
 #' I     <- ssi(theta, a.slit.width = a, lambda = lam)
 #' plot(theta*180/pi, I, typ="l", xlab="theta (deg)")
 #'
+#' @export
 #--------------------------------------------
 ssi <- function(theta, a.slit.width, lambda, Imax=1) {
 

@@ -19,6 +19,52 @@ update_che302r <- function() {
 }
 
 
+#' @title       Function to download an example script
+#' @description The function will download script that is an example
+#'
+#' @param script_name Name of the script
+#' @param url_head Location of the script (optional). If NULL, default location is used.
+#' @param download_location Where to download the script. If NULL, default location is used.
+#'
+#' @details The function will download an example script. Default url_head is currently:
+#'
+#' https://raw.githubusercontent.com/npetraco/che302r/refs/heads/main/inst/scripts_bank.
+#'
+#' Default download_location is currently: tempdir().
+#'
+#' @return The script should pop up.
+#'
+#' @examples get_script("XXXXXX.R")
+#'
+#' @export
+get_script <- function(script_name, url_head=NULL, download_location=NULL) {
+
+  if(is.null(url_head)) {
+    url_head.loc <- "https://raw.githubusercontent.com/npetraco/che302r/refs/heads/main/inst/scripts_bank"
+  } else {
+    url_head.loc <- url_head
+  }
+
+  if(is.null(download_location)) {
+    download_location.loc <- tempdir()
+  } else {
+    download_location.loc <- download_location
+  }
+
+  url_loc <- paste0(url_head.loc, "/", script_name)
+  #print(url_loc)
+
+  file_loc <- paste0(download_location.loc,"/",script_name)
+  #print(file_loc)
+
+  download.file(url_loc, file_loc)
+  print("File downloaded to:")
+  print(file_loc)
+  file.edit(file_loc)
+
+}
+
+
 #----------------------------------------------------------------
 #' @title Log sum exp trick
 #' @description Log sum exp trick to prevent over/underflow

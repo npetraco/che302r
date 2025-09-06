@@ -39,41 +39,77 @@ constants <- function(){
   print("See: ?constants")
 }
 
+#' @export
 h      <- 6.62607015e-34           # Planck's const NIST, Js
+#' @export
 cl     <- 299792458                # Speed of light NIST, m/s
+#' @export
 kB     <- 1.380649e-23             # Boltzmann's const NIST, J/K
+#' @export
 kb     <- kB                       # Also Boltzmann's const, J/K
+#' @export
 hb     <- h/(2*pi)                 # Reduced Planck's const, Js
+#' @export
 hbar   <- hb                       # Also reduced Planck's const, Js
+#' @export
 h.bar  <- hb                       # Also^2 reduced Planck's const, Js
+#' @export
 N.A    <- 6.02214076e23            # Avogadro's number NIST, particles
+#' @export
 na     <- N.A                      # Also Avogadro's number, particles; against my better judgement......
+#' @export
+N_A    <- N.A                      # Also Avogadro's number, particles; against my better judgement......
+#' @export
 me     <- 9.1093837139e-31         # Mass of electron, NIST, kg
+#' @export
 mP     <- 1.67262192595e-27        # Mass of proton NIST, kg
+#' @export
 mN     <- 1.67492750056e-27        # Mass of neutron NIST, kg
+#' @export
 muH    <- me*mP/(me+mP)            # Reduced mass of Hydrogen atom
+#' @export
 ec     <- 1.602176634e-19          # Charge of electron from NIST, Coulombs
+#' @export
 alphaf <- 0.0072973525643          # Fine structure constant from NIST
+#' @export
 eps0   <- 8.8541878188e-12         # Vacuum permittivity NIST, Farads/m
+#' @export
 eps0c  <- ec^2/(2*alphaf*h*cl)     # Vacuum permittivity from constants, Farads/m
+#' @export
 a0     <- 5.29177210544e-11        # Bohr radius from NIST, m
+#' @export
 a0c    <- 4*pi*eps0*hb^2/(me*ec^2) # Bohr radius from constants
+#' @export
 Rinf       <- 10973731.568157               # Rinfinity Rydberg constant from NIST, wavenumbers m^-1
+#' @export
 RinfJ.nist <- 2.1798723611030e-18           # Rinfinity Rydberg constant in Joules from NIST
+#' @export
 Rinfc      <- alphaf/(4*pi*a0)              # Rinfinity Rydberg constant from constants, wavenumbers m^-1
+#' @export
 RinfJ      <- h * cl/(1/(Rinf))             # Rinfinity Rydberg constant NIST value for Rinfinity, Joules
+#' @export
 RinfJc     <- me*ec^4/(32*pi^2*eps0^2*hb^2) # Rinfinity Rydberg constant from other constants, Joules
+#' @export
 RH         <- muH/me * Rinf/100             # "Corrected" Rydberg constant for Hydrogen, wavenumbers cm^-1
+#' @export
 RHJ        <- h * cl/(1/(RH*100))           # "Corrected" Rydberg constant for Hydrogen converted from RH, Joules
 
 # Handy Conversions
+#' @export
 eV2J         <- 1.602176634e-19                         # electron-volt to Joules, energy gained by 1 e- accelerated though 1V, i.e. 1ec*1V. Same magnitude as ec bec 1V = 1J/C
+#' @export
 J2eV         <- eV2J^(-1)                               # Joules to eV
+#' @export
 hartree2J    <- 4.3597447222060e-18                     # hartrees to Joules from NIST
+#' @export
 amu2kg       <- 1.0/(N.A*1000)                          # amu to kg = 1g/mol * 1mol/N.A * 1kg/1000g
+#' @export
 kg2amu       <- N.A*1000                                # kg to amu
+#' @export
 bohr2m       <- a0                                      # bohr to meters
+#' @export
 auf2Hz       <- sqrt(hartree2J * 1/(amu2kg * bohr2m^2)) # atomic units frequency to Hz, Unit= s^-1
+#' @export
 lambdaFw2icm <- auf2Hz/(2*pi*cl*100)                    # atomic units mass weighted Fw eigenvalues to nu-tilde = omega/(2*pi*c), Unit = cm^-1
                                                         # lambdaF2icm ---> 5140.485 # Conversion factor from sqrt(hartree/amu-bohr^2) to cm^-1
 
@@ -99,6 +135,7 @@ lambdaFw2icm <- auf2Hz/(2*pi*cl*100)                    # atomic units mass weig
 #' RH # a tad different because 1 amu != mP or mN
 #'
 #' RydM(2*mP+2*mN, mass.unit = "kg", en.unit = "cm-1") # Rydberg for Helium-4 +1 ion
+#' @export
 #--------------------------------------------
 RydM <- function(at.mass, mass.unit="amu", en.unit="cm-1"){
 

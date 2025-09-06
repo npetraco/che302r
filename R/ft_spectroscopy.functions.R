@@ -1,6 +1,7 @@
 #Planck Black Body Distribution:
 #nt = nu-tilde (m^-1)
 #Temp = temperature (K)
+#' @export
 B<-function(nt,Temp) {
   val<- (2*h*cl^2*nt^3* 1/(exp((h*cl*nt)/(kB*Temp)) - 1) )
   return(val)
@@ -12,6 +13,7 @@ B<-function(nt,Temp) {
 #Bp = corresponding intensity distribution
 #sft = mirror position
 #NOTE: THIS IS SLOW AND IS TEMEPERMENTAL AROUND 0 m^-1
+#' @export
 interferogram.func<-function(wns,Bp,sft) {
   integrand.func<-splinefun(wns,Bp*cos(2*pi*wns*sft))
   val<-integrate(integrand.func,lower=min(wns),upper=max(wns),stop.on.error=F)$value
@@ -21,6 +23,7 @@ interferogram.func<-function(wns,Bp,sft) {
 #------------------------------------------------------------------
 #FFT the interferogram and clean it up to make a pretty spectrum
 #------------------------------------------------------------------
+#' @export
 fft.interferogram<-function(interfero,Delt,dm,plot.typ=NULL) {
 
   leng<-2*Delt
@@ -55,6 +58,7 @@ fft.interferogram<-function(interfero,Delt,dm,plot.typ=NULL) {
 #------------------------------------------------------------------
 #FFT the interferogram and clean it up to make a pretty spectrum
 #------------------------------------------------------------------
+#' @export
 fft.interferogram2<-function(interfero, plot.typ="%T") {
 
   #Mirror positions. Needed to compute the interferogram:
@@ -113,6 +117,7 @@ fft.interferogram2<-function(interfero, plot.typ="%T") {
 #------------------------------------------
 #Simulate a (random) vibrational spectrum
 #------------------------------------------
+#' @export
 simulate.a.vibrational.spectrum<-function(plotQ=TRUE, source.only=FALSE){
 
   #Mirror positions. Needed to compute the interferogram:
@@ -152,6 +157,7 @@ simulate.a.vibrational.spectrum<-function(plotQ=TRUE, source.only=FALSE){
 #------------------------------------------
 #Generate a vibrational spectrum by inputting some frequencies
 #------------------------------------------
+#' @export
 generate.a.vibrational.spectrum<-function(frequency.vec, plotQ=TRUE){
 
   #Mirror positions. Needed to compute the interferogram:
@@ -194,6 +200,7 @@ generate.a.vibrational.spectrum<-function(frequency.vec, plotQ=TRUE){
 #---------------------------------------------------------------------------------
 #Generate an interferogram from a spectrum of freqs by adding up their sinusoids
 #---------------------------------------------------------------------------------
+#' @export
 make.interferogram<-function(spectrum, zoomQ=FALSE){
 
   #Mirror positions. Needed to compute the interferogram:
@@ -232,6 +239,7 @@ make.interferogram<-function(spectrum, zoomQ=FALSE){
 #----------------------------------------------
 #Mix a few sinusoids together,view interferogram
 #----------------------------------------------
+#' @export
 mix.some.freqs<-function(freq.vec, plot.typ="spectrum"){
 
   #Mirror positions. Needed to compute the interferogram:
@@ -283,6 +291,7 @@ mix.some.freqs<-function(freq.vec, plot.typ="spectrum"){
 #----------------------------------------------
 #Plots a centerburst, zoomed in,interferogram
 #----------------------------------------------
+#' @export
 plot.interferogram<-function(interfero, zoomQ=F, zoom.clip=100){
 
   #CAUTION: Assumes interferogram was generated with these parameters:
@@ -311,6 +320,7 @@ plot.interferogram<-function(interfero, zoomQ=F, zoom.clip=100){
 
 
 # Plot a spectrum with pretty axis labels
+#' @export
 plot.spectrum <- function(spectrum.mat) {
 
   plot(spectrum.mat[,1], spectrum.mat[,2],
@@ -323,6 +333,7 @@ plot.spectrum <- function(spectrum.mat) {
 
 
 # Read in and process a JDX format spectrum from the NIST WebBook
+#' @export
 process.JDX.spectrum <- function(input.dat, printQ=FALSE, plotQ=FALSE){
 
   if(is.character(input.dat)){ # If a string path or URL is passed in
@@ -369,6 +380,7 @@ process.JDX.spectrum <- function(input.dat, printQ=FALSE, plotQ=FALSE){
 
 
 # Find peaks
+#' @export
 find.peaks<-function(spectrum.mat, spectrum.typ="Absorbance", deriv.tol, peak.tol=NULL, plotQ=FALSE) {
 
   # Taken from profileslib

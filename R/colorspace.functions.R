@@ -5,17 +5,21 @@ data("ciexyz1931")
 # NOTE: needs library(colorspace)
 # NOTE: XXXXXX in data
 #--------------------------------------------
+#' @export
 x31 <- ciexyz1931[,2]/(ciexyz1931[,2]+ciexyz1931[,3]+ciexyz1931[,4])
+#' @export
 y31 <- ciexyz1931[,3]/(ciexyz1931[,2]+ciexyz1931[,3]+ciexyz1931[,4])
 
 
 #--------------------------------------------
 # Spline together CIE 1931 cmf data together so we can use them as function if needed
 #--------------------------------------------
+#' @export
 xbar.sf <- splinefun(ciexyz1931$wlnm, ciexyz1931$xbar)
+#' @export
 ybar.sf <- splinefun(ciexyz1931$wlnm, ciexyz1931$ybar)
+#' @export
 zbar.sf <- splinefun(ciexyz1931$wlnm, ciexyz1931$zbar)
-
 
 
 #----------------------------------------------------------------
@@ -30,6 +34,7 @@ zbar.sf <- splinefun(ciexyz1931$wlnm, ciexyz1931$zbar)
 #'
 #' @return The function will XX
 #'
+#' @export
 #----------------------------------------------------------------
 make.spectral.locus <- function(delta.lambda=1, num.lambda=NULL, lambda.start=380, lambda.stop=780){
 
@@ -65,6 +70,7 @@ make.spectral.locus <- function(delta.lambda=1, num.lambda=NULL, lambda.start=38
 #'
 #' @return The function will XX
 #'
+#' @export
 #----------------------------------------------------------------
 make.alychne <- function(lambda.left=380, lambda.right=780, type="data", num.pts=1000){
 
@@ -111,6 +117,8 @@ make.alychne <- function(lambda.left=380, lambda.right=780, type="data", num.pts
 #'
 #' @examples
 #' wavelengthToColor(536)
+#'
+#' @export
 #--------------------------------------------
 wavelengthToColor <- function(wavelength) {
   wl <- wavelength
@@ -185,6 +193,8 @@ wavelengthToColor <- function(wavelength) {
 #'
 #' @examples
 #' wavelengthToColor(536)
+#'
+#' @export
 #--------------------------------------------
 color_partition <- function(wavelength) {
   wl <- wavelength
@@ -227,6 +237,7 @@ color_partition <- function(wavelength) {
 #'
 #' @return A chromaticity's purity with respect to the white point
 #'
+#' @export
 #--------------------------------------------
 color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
 
@@ -271,6 +282,7 @@ color_purity <- function(xc, yc, xw=0.31, yw=0.33, percentQ=T, printQ=F){
 #'
 #' @return A chromaticity's purity with respect to the white point
 #'
+#' @export
 #--------------------------------------------
 compute_hue <- function(xc, yc, xw=0.31, yw=0.33){
 
@@ -306,6 +318,7 @@ compute_hue <- function(xc, yc, xw=0.31, yw=0.33){
 
 
 # Gamma correction for sRGB
+#' @export
 gamma.sRGB <- function(RGB.vec){
   RGB.vec.gc <- RGB.vec
   for(i in 1:3){
@@ -320,6 +333,7 @@ gamma.sRGB <- function(RGB.vec){
 
 
 # Gamma correction for AdobeRGB
+#' @export
 gamma.AdobeRGB <- function(RGB.vec){
 
   gammaa     <- 1/2.19921875
@@ -338,6 +352,7 @@ gamma.AdobeRGB <- function(RGB.vec){
 
 
 # Gamma correction for P3RGB
+#' @export
 gamma.P3RGB <- function(RGB.vec){
 
   gammaa     <- 1/2.6 # ????
@@ -356,6 +371,7 @@ gamma.P3RGB <- function(RGB.vec){
 
 
 # Convert a vector to hex components formatted conveniently to use as a color code
+#' @export
 vec2hex <- function(a.vec){
 
   a.vec.hex <- NULL
@@ -499,6 +515,8 @@ tria <- function(vtx1, vtx2, vtx3){
 #' region is a convex hull.
 #'
 #' @return The function will XX
+#'
+#' @export
 #----------------------------------------------------------------
 purpleQ <- function(cp, white.point=c(0.31,0.33), left.purple.vertex=c(0.175560232,0.005293837), right.purple.vertex=c(0.73469,0.26531), tol=1e-5){
 
@@ -527,6 +545,7 @@ purpleQ <- function(cp, white.point=c(0.31,0.33), left.purple.vertex=c(0.1755602
 
 
 # Hand convert to sRGB:
+#' @export
 XYZ2sRGB <- function(XYZ.vec){
 
   XYZ.vec.loc <- as.numeric(XYZ.vec)
@@ -589,6 +608,7 @@ XYZ2sRGB <- function(XYZ.vec){
 
 
 # Hand convert to AdobeRGB:
+#' @export
 XYZ2Adobe <- function(XYZ.vec){
 
   XYZ.vec.loc <- as.numeric(XYZ.vec)
@@ -647,6 +667,7 @@ XYZ2Adobe <- function(XYZ.vec){
 
 
 # Hand convert to DCI-P3 Display:
+#' @export
 XYZ2P3 <- function(XYZ.vec){
 
   XYZ.vec.loc <- as.numeric(XYZ.vec)
@@ -775,6 +796,7 @@ xyY_swatch <- function(xyY.vec, type="Adobe"){
 
 # An adequate version exists in colorscience package, so comment out for now.
 # Convenience function to convert xyY to XYZ
+#' @export
 xyY2XYZ2 <- function(xyY.vec){
 
   x.loc <- xyY.vec[1]
@@ -801,6 +823,7 @@ xyY2XYZ2 <- function(xyY.vec){
 #'
 #' @return The function will XX
 #'
+#' @export
 #----------------------------------------------------------------
 plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="sRGB"){
 
@@ -885,6 +908,7 @@ plot_spectral_locus <- function(Y.level, white.point=c(0.31,0.33), type="sRGB"){
 #'
 #' @return The function will XX
 #'
+#' @export
 #----------------------------------------------------------------
 xyl.lut <- function(xch, ych, lambda=NULL, delta.lambda=0.1, tol=0.005, printQ=F){
 

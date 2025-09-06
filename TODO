@@ -4,10 +4,14 @@ Simulation, perhaps:
 2D particle simulation in a box
   different size boxes (square, retangle, sphere, etc??)
   change potentials
+1D and 2D Isin models
 
 UV-vis simulation functions.
   cf. https://pubs.acs.org/doi/epdf/10.1021/acs.jchemed.3c00171?ref=article_openPDF
 
-Break out functions/data that depend on colorscience library into a stand alone
-library eg, colorscience_util and get ride of explicit dependency on colorscience
+IN PROGRESS Break out functions/data that depend on colorscience library into a stand alone
+            library eg, colorscience_util and get rid of explicit dependency on colorscience
 
+DONE Get rid of exportPattern("^[[:alpha:]]+") in NAMESPACE and export all functions
+
+DONE Put constants in use_data or export them all??

@@ -21,4 +21,5 @@ It works the same way as wavelengthToColor
 }
 \examples{
 wavelengthToColor(536)
+
 }

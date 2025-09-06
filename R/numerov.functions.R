@@ -2,6 +2,7 @@
 # Numerov's recursive formula for the wave function
 # (f is the wave function. np1/nm1 means n plus/minus one)
 #--------------------------------------------
+#' @export
 f.point.plus.one<-function(f.point,f.point.minus.one,increment,G.point.plus.one,G.point,G.point.minus.one) {
   return((2*f.point - f.point.minus.one + (5*G.point*f.point*increment^2)/6 + (G.point.minus.one*f.point.minus.one*increment^2)/12)/(1 - (G.point.plus.one*increment^2)/12))
 }
@@ -10,6 +11,7 @@ f.point.plus.one<-function(f.point,f.point.minus.one,increment,G.point.plus.one,
 #--------------------------------------------
 #G function:
 #--------------------------------------------
+#' @export
 G<-function(disc.V, an.Energy) {
   return(2*(disc.V - an.Energy))
 }
@@ -51,6 +53,7 @@ G<-function(disc.V, an.Energy) {
 #' x     <- seq(from=x.min,to=x.max,by=dx)
 #' plot(x,V(x,"anharmonic"))
 #'
+#' @export
 #--------------------------------------------
 V<-function(xax,potential.name, l=NULL, wonky.params=list(coef=c(1,1,1,1,1,1), root=c(-2,-1,0,1,2,3)), nh3.params=c(k=1,b=12,c=1)) {
 
@@ -179,6 +182,7 @@ V<-function(xax,potential.name, l=NULL, wonky.params=list(coef=c(1,1,1,1,1,1), r
 #' #Plot the normalized wave function:
 #' plot(r, r^2*Npsi.info[,2], xlim=c(min(r),max(r)), ylab="N psi(x)", typ="l")
 #'
+#' @export
 #--------------------------------------------
 numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E.guess,num.iterations, delay.time=0.00, ...){
 
@@ -279,6 +283,7 @@ numerov.procedure <- function(xaxis, dxaxis, PE.function.name, nodes.in.state, E
 #' @examples
 #' cf. examples in numerov.procedure
 #'
+#' @export
 #--------------------------------------------
 approx.normalize<-function(wf.info, include.jacobian=FALSE, plotQ=FALSE) {
   xx<-wf.info[,1]

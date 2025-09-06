@@ -22,4 +22,5 @@ guy may have written the original code however: https://earlglynn.github.io/
 }
 \examples{
 wavelengthToColor(536)
+
 }

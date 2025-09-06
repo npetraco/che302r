@@ -7,6 +7,7 @@
 #--------------------------------------------
 #Convert spherical coordinates to Cartesian coordinates
 #--------------------------------------------
+#' @export
 spherical.to.cartesian<-function(rl,tha,pha) {
   x<- rl * sin(tha) * cos(pha)
   y<- rl * sin(tha) * sin(pha)
@@ -18,6 +19,7 @@ spherical.to.cartesian<-function(rl,tha,pha) {
 #--------------------------------------------
 #Convert Cartesian coordinates to spherical coordinates
 #--------------------------------------------
+#' @export
 cartesian.to.spherical<-function(xx.in,yy.in,zz.in) {
 
   rl  <- sqrt(xx.in^2 + yy.in^2 + zz.in^2)
@@ -80,6 +82,7 @@ cartesian.to.spherical<-function(xx.in,yy.in,zz.in) {
 #' #3D with rgl
 #' plot3d(x,y,z,type="s",radius=0.1,xlab="x",ylab="y",zlab="z")
 #'
+#' @export
 #--------------------------------------------
 sample.density2<-function(nqn, lqn, mqn, spherical.grid, num.samples) {
 
@@ -120,6 +123,7 @@ sample.density2<-function(nqn, lqn, mqn, spherical.grid, num.samples) {
 #--------------------------------------------
 #Generates the symbolic expression for the desired Laguerre polynomial
 #--------------------------------------------
+#' @export
 laguerreLgen<-function(nn,ll){
 
   poly.nom <- glaguerre.polynomials(nn, ll, normalized=F)
@@ -132,6 +136,7 @@ laguerreLgen<-function(nn,ll){
 #--------------------------------------------
 #Generate a numerical representation of the desired radial wavefunction
 #--------------------------------------------
+#' @export
 Radial<-function(nn,ll,rr){
 
   lag.poly <- laguerreLgen(nn-ll-1, 2*ll+1)
@@ -152,6 +157,7 @@ Radial<-function(nn,ll,rr){
 #--------------------------------------------
 #Generates the symbolic expression for a Legendre polynomial
 #--------------------------------------------
+#' @export
 legendrePgen<-function(ll){
 
   poly.nom <- legendre.polynomials(ll, normalized=F)
@@ -164,6 +170,7 @@ legendrePgen<-function(ll){
 #--------------------------------------------
 #Generates the symbolic expression for |m|^th derivative Legendre polynomial. Needed for Associated Legendre polynomials
 #--------------------------------------------
+#' @export
 mderivlegendrePgen<-function(ll,mm){
 
   polyd <- legendrePgen(l)
@@ -178,6 +185,7 @@ mderivlegendrePgen<-function(ll,mm){
 #--------------------------------------------
 #A pure function for the associated Legendre polynomial
 #--------------------------------------------
+#' @export
 LegendrePfunc<-function(ll,mm){
 
   deriv.func <- polynomial.functions(mderivlegendrePgen(ll,mm))[[1]]
@@ -193,6 +201,7 @@ LegendrePfunc<-function(ll,mm){
 #--------------------------------------------
 #Compute a numerical representation for the associated Legendre polynomial
 #--------------------------------------------
+#' @export
 LegendreP<-function(ll,mm,thetaa){
 
   xxx<-cos(thetaa)
@@ -211,6 +220,7 @@ LegendreP<-function(ll,mm,thetaa){
 #--------------------------------------------
 #Compute the (numerical) Phi wave function for the equitorial angle
 #--------------------------------------------
+#' @export
 PhiF<-function(mm,phii){
 
   return(1/sqrt(2*pi) * exp((mm*complex(real = 0, imaginary = 1))*phii))
@@ -227,6 +237,7 @@ PhiF<-function(mm,phii){
 # Generate spline versions of the squared orbital component functions:
 # This will save us from having to re-evaluate using the slower polynomial functions during MCMC
 #--------------------------------------------
+#' @export
 splined.sqorb.functs <- function(n, l, m, r.max = 20, num.knots = 1000){
 
   r     <- seq(from=1e-6, to=r.max, length.out = num.knots)
@@ -274,12 +285,14 @@ splined.sqorb.functs <- function(n, l, m, r.max = 20, num.knots = 1000){
 # Next step proposal for Metropolis algorithm, generalized to any number of parameters.
 # CAUTION: uses Gaussian proposal
 #--------------------------------------------
+#' @export
 proposal <- function(theta.curr, proposal.wid){sapply(1:length(theta.curr), function(xx){rnorm(n = 1, mean = theta.curr[xx], sd = proposal.wid[xx])})}
 
 #--------------------------------------------
 # Orbital Ansatz using spline functions
 # Log Density ansatz. Pass in splined function info to hide from user. ****Looks yucky though!
 #--------------------------------------------
+#' @export
 ansatz <- function(a.theta, R.den.func, Th.den.func, Ph.den.func, rax.ext){
 
   # abs the density functions incase they go slightly negative
@@ -310,6 +323,7 @@ ansatz <- function(a.theta, R.den.func, Th.den.func, Ph.den.func, rax.ext){
 #--------------------------------------------
 # Log Metropolis ratio. Pass in splined function info to hide code...... Looks yucky
 #--------------------------------------------
+#' @export
 r.metrop <- function(theta.curr, theta.prop, rsf, thsf, phsf, rext){
   val <- ansatz(theta.prop, rsf, thsf, phsf, rext) - ansatz(theta.curr, rsf, thsf, phsf, rext)
   if(is.nan(val)){
@@ -323,6 +337,7 @@ r.metrop <- function(theta.curr, theta.prop, rsf, thsf, phsf, rext){
 # Should execute for any number of dimensions for a parameter vector.
 # Requires that an ansatz (a not necessarily normalized pdf) be defined
 #--------------------------------------------
+#' @export
 sampler.gen <- function(num.iter=100, theta.init=c(0.5,0.5), proposal.width=c(0.5,0.5), spline.func.info){
 
   theta.current     <- theta.init
@@ -372,6 +387,7 @@ sampler.gen <- function(num.iter=100, theta.init=c(0.5,0.5), proposal.width=c(0.
 #
 # Wrapper to run MCMC for the orbital densities:
 #--------------------------------------------
+#' @export
 sample.density3a<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.thin=1, num.burnin=0) {
 
   mpi  <- sampler.gen(
@@ -402,6 +418,7 @@ sample.density3a<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.t
 #--------------------------------------------
 # Wrapper to run MCMC for the orbital densities. This one we can input the proposal jump widths:
 #--------------------------------------------
+#' @export
 sample.density3b<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.thin=1, num.burnin=0, jump.widths=c(1,1,1), printQ=FALSE) {
 
   mpi  <- sampler.gen(
@@ -507,6 +524,7 @@ sample.density3b<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.t
 #' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #'
+#' @export
 #--------------------------------------------
 sample.orbital.density.mcmc<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE) {
 
@@ -602,6 +620,7 @@ sample.orbital.density.mcmc<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE
 #' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #'
+#' @export
 #--------------------------------------------
 sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, num.processes=1) {
 
@@ -710,6 +729,7 @@ sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, pri
 #' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #'
+#' @export
 #--------------------------------------------
 sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE) {
 
@@ -917,6 +937,7 @@ sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE)
 #' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #'
+#' @export
 #--------------------------------------------
 sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, num.processes=1) {
 
@@ -1130,6 +1151,7 @@ sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, prin
 #' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
 #'
+#' @export
 #--------------------------------------------
 sample.orbital.density<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, algorithm="ais", type="serial", num.processes=1) {
 
