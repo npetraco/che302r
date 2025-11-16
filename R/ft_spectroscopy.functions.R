@@ -321,7 +321,7 @@ plot.interferogram<-function(interfero, zoomQ=F, zoom.clip=100){
 
 # Plot a spectrum with pretty axis labels
 #' @export
-plot.spectrum <- function(spectrum.mat) {
+plot_spectrum <- function(spectrum.mat) {
 
   plot(spectrum.mat[,1], spectrum.mat[,2],
        typ="l",
