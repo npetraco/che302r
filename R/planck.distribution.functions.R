@@ -1,5 +1,5 @@
 #--------------------------------------------
-#' @title Plank distribution as a function of wavenumber.
+#' @title Planck distribution as a function of wavenumber.
 #' @description This is a function to plot the Plank distribution as a function of wavenumber (m^-1).
 #'
 #' @param nut.min The smallest wavenumber to use. Use something at least little larger than 0.
@@ -19,6 +19,7 @@
 #' planck.distribution.nutilde(10000,3000000,1500)
 #'
 #--------------------------------------------
+#' @export
 planck.distribution.nutilde<-function(nut.min, nut.max, Temp, plotQ=FALSE) {
 
   #Make a nu-tilde (nut) axis. This is the x-axis.
@@ -64,6 +65,7 @@ planck.distribution.nutilde<-function(nut.min, nut.max, Temp, plotQ=FALSE) {
 #' planck.distribution.lambda(10e-9,12000e-9,1500)
 #'
 #--------------------------------------------
+#' @export
 planck.distribution.lambda<-function(lam.min, lam.max, Temp, plotQ=FALSE) {
 
   #Make a nu-tilde (nut) axis. This is the x-axis.
@@ -109,6 +111,7 @@ planck.distribution.lambda<-function(lam.min, lam.max, Temp, plotQ=FALSE) {
 #' planck.distribution.nu(10e10, 6e14, 1500, plotQ = T)
 #'
 #--------------------------------------------
+#' @export
 planck.distribution.nu<-function(nu.min, nu.max, Temp, plotQ=FALSE) {
 
   #Make a nu-tilde (nut) axis. This is the x-axis.
@@ -157,6 +160,7 @@ planck.distribution.nu<-function(nu.min, nu.max, Temp, plotQ=FALSE) {
 #' planck.distribution(typ = "frequency",  10e10, 6e14,     1500, plotQ = T)
 #'
 #--------------------------------------------
+#' @export
 planck.distribution<-function(typ, x.min, x.max, Temp, plotQ=FALSE) {
 
   if(typ=="wavenumber"){

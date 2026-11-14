@@ -2,7 +2,7 @@
 % Please edit documentation in R/planck.distribution.functions.R
 \name{planck.distribution.nutilde}
 \alias{planck.distribution.nutilde}
-\title{Plank distribution as a function of wavenumber.}
+\title{Planck distribution as a function of wavenumber.}
 \usage{
 planck.distribution.nutilde(nut.min, nut.max, Temp, plotQ = FALSE)
 }

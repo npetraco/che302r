@@ -4,10 +4,20 @@ Simulation, perhaps:
 2D particle simulation in a box
   different size boxes (square, retangle, sphere, etc??)
   change potentials
-1D and 2D Isin models
+1D and 2D Ising models
 
 UV-vis simulation functions.
   cf. https://pubs.acs.org/doi/epdf/10.1021/acs.jchemed.3c00171?ref=article_openPDF
+
+IN PROGRESS Color obital lobes by radial nodes and expose sample.size to user
+            *color lobes:
+            Add color function for points as a function of r-coordinate and r^2R^2(r) lobe it is in.
+            Need to locate minima in r^2R^2(r) density for cutoffs.
+            *sample.size:
+            sample.orbital.density.mcmc
+            sample.orbital.density.mcmc.parallel
+            sample.orbital.density.ais
+            sample.orbital.density.ais.parallel
 
 IN PROGRESS Break out functions/data that depend on colorscience library into a stand alone
             library eg, colorscience_util and get rid of explicit dependency on colorscience
