@@ -4,7 +4,16 @@
 \alias{sample.orbital.density.ais}
 \title{Sample the wave function's density using AIS}
 \usage{
-sample.orbital.density.ais(nqn, lqn, mqn, orb.func.info, printQ = FALSE)
+sample.orbital.density.ais(
+  nqn,
+  lqn,
+  mqn,
+  orb.func.info,
+  num.samples = 2500,
+  num.beta = 50,
+  tkn.steps = 5,
+  printQ = FALSE
+)
 }
 \arguments{
 \item{nqn}{n quantum number}

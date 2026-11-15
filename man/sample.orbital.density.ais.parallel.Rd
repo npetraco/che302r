@@ -9,6 +9,9 @@ sample.orbital.density.ais.parallel(
   lqn,
   mqn,
   orb.func.info,
+  num.samples = 5000,
+  num.beta = 50,
+  tkn.steps = 5,
   printQ = FALSE,
   num.processes = 1
 )

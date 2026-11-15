@@ -474,6 +474,7 @@ sample.density3b<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.t
 
 }
 
+
 #--------------------------------------------
 #' @title MCMC sample orbital density
 #' @description Sample the orbital wave function's density by simple Metropolis Markov Chain Monte Carlo
@@ -539,26 +540,29 @@ sample.density3b<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.t
 #'
 #' @export
 #--------------------------------------------
-sample.orbital.density.mcmc<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE) {
+sample.orbital.density.mcmc<-function(nqn, lqn, mqn, orb.func.info, pss=187500, thin=150, jumps=c(2.38,2.38,2.38), burnin=100, num.chains=4, printQ=FALSE) {
 
   print("====== Normal pass ======")
-  normal.pass.samp.size <- 187500
+  print(paste0("Thinned chain sample size will be: ", (pss-burnin)/thin))
+  print(paste0(num.chains, " chains will run for a total sample size = ", (pss - burnin)*num.chains/thin))
+
+  normal.pass.samp.size <- pss
 
   samp.coords <- NULL
 
-   for(i in 1:4) {
+  for(i in 1:num.chains) {
 
-     print(paste("---- Starting Chain:", i, "----"))
+    print(paste("---- Starting Chain:", i, "----"))
 
-     samp.coords <- rbind(samp.coords,
-                          sample.density3b(nqn, lqn, mqn, orb.func.info,
-                                           num.samples = normal.pass.samp.size,
-                                           num.thin    = 150,
-                                           jump.widths = c(2.38,2.38,2.38),
-                                           num.burnin  = 100,
-                                           printQ)
-                          )
-     print(paste("---- Chain:", i, "Done ----"))
+    samp.coords <- rbind(samp.coords,
+                         sample.density3b(nqn, lqn, mqn, orb.func.info,
+                                          num.samples = normal.pass.samp.size,
+                                          num.thin    = thin,
+                                          jump.widths = jumps,
+                                          num.burnin  = burnin,
+                                          printQ)
+    )
+    print(paste("---- Chain:", i, "Done ----"))
   }
 
   colnames(samp.coords) <- c("x","y","z","r","theta","phi")
@@ -635,23 +639,16 @@ sample.orbital.density.mcmc<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE
 #'
 #' @export
 #--------------------------------------------
-sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, num.processes=1) {
+sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, pss=187500, thin=150, jumps=c(2.38,2.38,2.38), burnin=100, num.chains=4, printQ=FALSE, num.processes=1) {
 
   #registerDoMC(num.processes)
-
   #print(paste("Using",getDoParWorkers(), "processes."))
 
   print("====== Normal pass ======")
-  normal.pass.samp.size <- 187500
+  print(paste0("Thinned chain sample sizes will be: ", (pss-burnin)/thin))
+  print(paste0(num.chains, " chains will run on ", num.processes," processes for a total sample size = ", (pss - burnin)*num.chains/thin))
+  normal.pass.samp.size <- pss
 
-  # samp.coords <- foreach(i=1:4, .combine="rbind") %dopar% {
-  #   sample.density3b(nqn, lqn, mqn, orb.func.info,
-  #                    num.samples = normal.pass.samp.size,
-  #                    num.thin    = 150,
-  #                    jump.widths = c(2.38,2.38,2.38),
-  #                    num.burnin  = 100,
-  #                    printQ)
-  # }
   # Run parallel loop here with progress bar
   cl <- makeSOCKcluster(num.processes)
   registerDoSNOW(cl)
@@ -660,17 +657,16 @@ sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, pri
   opts <- list(progress=progress)
 
   samp.coords <-
-    foreach(i=1:4,  .options.snow=opts, .combine='rbind') %dopar% {
+    foreach(i=1:num.chains, .export = c("sample.density3b"), .options.snow=opts, .combine='rbind') %dopar% {
       sample.density3b(nqn, lqn, mqn, orb.func.info,
                        num.samples = normal.pass.samp.size,
-                       num.thin    = 150,
-                       jump.widths = c(2.38,2.38,2.38),
-                       num.burnin  = 100,
+                       num.thin    = thin,
+                       jump.widths = jumps,
+                       num.burnin  = burnin,
                        printQ)
     }
   close(pb)
   stopCluster(cl)
-
 
   colnames(samp.coords) <- c("x","y","z","r","theta","phi")
 
@@ -744,7 +740,7 @@ sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, pri
 #'
 #' @export
 #--------------------------------------------
-sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE) {
+sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, num.samples=2500, num.beta=50, tkn.steps=5, printQ=FALSE) {
 
   rsqf  <- orb.func.info$R.sq.func
   thsqf <- orb.func.info$Theta.sq.func
@@ -792,7 +788,7 @@ sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE)
   }
 
   # Transition kernel to bridge from starting density to target density with short MCMCa
-  TransK <- function(an.x, a.beta, n.steps=10){
+  TransK <- function(an.x, a.beta, n.steps){
     for(t in 1:n.steps) {
 
       # Proposal
@@ -843,10 +839,10 @@ sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE)
   }
 
   # Do the sampling
-  n.beta   <- 50 # Bridge over this many intermediate densities
+  n.beta   <- num.beta # Bridge over this many intermediate densities
   beta.seq <- seq(from = 0, to = 1, length.out = n.beta) # Inverse temp sequence
 
-  n.samples   <- 2500 # Sample size sought from target density
+  n.samples   <- num.samples # Sample size sought from target density
   the.samples <- array(NA, c(n.samples,3))
   the.weights <- numeric(n.samples)
 
@@ -860,7 +856,7 @@ sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE)
     for(j in 2:length(beta.seq)){
 
       # Transition
-      xi <- TransK(xi, beta.seq[j], n.steps=5)
+      xi <- TransK(xi, beta.seq[j], n.steps=tkn.steps)
 
       # Compute weight in log space (log-sum):
       wi <- wi + ( logfj(xi, beta.seq[j]) - logfj(xi, beta.seq[j-1]) )
@@ -952,7 +948,7 @@ sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE)
 #'
 #' @export
 #--------------------------------------------
-sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, num.processes=1) {
+sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.beta=50, tkn.steps=5, printQ=FALSE, num.processes=1) {
 
   rsqf  <- orb.func.info$R.sq.func
   thsqf <- orb.func.info$Theta.sq.func
@@ -1000,7 +996,7 @@ sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, prin
   }
 
   # Transition kernel to bridge from starting density to target density with short MCMCa
-  TransK <- function(an.x, a.beta, n.steps=10){
+  TransK <- function(an.x, a.beta, n.steps){
     for(t in 1:n.steps) {
 
       # Proposal
@@ -1053,9 +1049,9 @@ sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, prin
   #-----------------
   # Do the sampling
   #-----------------
-  n.beta    <- 50 # Bridge over this many intermediate densities
+  n.beta    <- num.beta # Bridge over this many intermediate densities
   beta.seq  <- seq(from = 0, to = 1, length.out = n.beta) # Inverse temp sequence
-  n.samples <- 5000 # Sample size sought from target density
+  n.samples <- num.samples # Sample size sought from target density
 
   # Sample function for parallel loop kernel. Every execution of this produces a sample:
   a.sample <- function() {
@@ -1067,7 +1063,7 @@ sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, prin
     for(jj in 2:length(beta.seq)){
 
       # Transition
-      xi <- TransK(xi, beta.seq[jj], n.steps=5)
+      xi <- TransK(xi, beta.seq[jj], n.steps=tkn.steps)
 
       # Compute weight in log space (log-sum):
       wi <- wi + ( logfj(xi, beta.seq[jj]) - logfj(xi, beta.seq[jj-1]) )
@@ -1166,21 +1162,21 @@ sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, prin
 #'
 #' @export
 #--------------------------------------------
-sample.orbital.density<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, algorithm="ais", type="serial", num.processes=1) {
+sample.orbital.density<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, algorithm="ais", type="serial", mc.pss=187500, mc.thin=150, mc.jumps=c(2.38,2.38,2.38), mc.burnin=100, ais.num.samples=2500, ais.num.beta=50, ais.tkn.steps=5, num.chains=4, num.processes=1) {
 
   if(algorithm=="mcmc") {
     if(type=="serial") {
-      samp.coords <- sample.orbital.density.mcmc(nqn, lqn, mqn, orb.func.info, printQ)
+      samp.coords <- sample.orbital.density.mcmc(nqn = nqn, lqn = lqn, mqn = mqn, orb.func.info = orb.func.info, pss=mc.pss, thin=mc.thin, jumps=mc.jumps, burnin=mc.burnin, num.chains = num.chains, printQ = printQ)
     } else if(type=="parallel") {
-      samp.coords <- sample.orbital.density.mcmc.parallel(nqn, lqn, mqn, orb.func.info, printQ, num.processes = num.processes)
+      samp.coords <- sample.orbital.density.mcmc.parallel(nqn = nqn, lqn = lqn, mqn = mqn, orb.func.info = orb.func.info, pss=mc.pss, thin=mc.thin, jumps=mc.jumps, burnin=mc.burnin, num.chains=num.chains, printQ=FALSE, num.processes=num.processes)
     } else {
       stop("Choose serial or parallel")
     }
   } else if(algorithm=="ais") {
     if(type=="serial") {
-      samp.coords <- sample.orbital.density.ais(nqn, lqn, mqn, orb.func.info, printQ)
+      samp.coords <- sample.orbital.density.ais(nqn = nqn, lqn = lqn, mqn = mqn, orb.func.info = orb.func.info, printQ = printQ, num.samples=ais.num.samples, num.beta=ais.num.beta, tkn.steps=ais.tkn.steps)
     } else if(type=="parallel") {
-      samp.coords <- sample.orbital.density.ais.parallel(nqn, lqn, mqn, orb.func.info, printQ, num.processes = num.processes)
+      samp.coords <- sample.orbital.density.ais.parallel(nqn = nqn, lqn = lqn, mqn = mqn, orb.func.info = orb.func.info, printQ = printQ, num.samples=ais.num.samples, num.beta=ais.num.beta, tkn.steps=ais.tkn.steps, num.processes = num.processes)
     } else {
       stop("Choose serial or parallel")
     }
@@ -1206,7 +1202,7 @@ sample.orbital.density<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, alg
 #'
 #' @return XX
 #'
-#' @references XXXXX
+#' @references Class of F26
 #'
 #' @examples
 #' XX

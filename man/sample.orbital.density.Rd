@@ -12,6 +12,14 @@ sample.orbital.density(
   printQ = FALSE,
   algorithm = "ais",
   type = "serial",
+  mc.pss = 187500,
+  mc.thin = 150,
+  mc.jumps = c(2.38, 2.38, 2.38),
+  mc.burnin = 100,
+  ais.num.samples = 2500,
+  ais.num.beta = 50,
+  ais.tkn.steps = 5,
+  num.chains = 4,
   num.processes = 1
 )
 }

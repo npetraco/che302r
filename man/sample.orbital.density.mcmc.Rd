@@ -4,7 +4,18 @@
 \alias{sample.orbital.density.mcmc}
 \title{MCMC sample orbital density}
 \usage{
-sample.orbital.density.mcmc(nqn, lqn, mqn, orb.func.info, printQ = FALSE)
+sample.orbital.density.mcmc(
+  nqn,
+  lqn,
+  mqn,
+  orb.func.info,
+  pss = 187500,
+  thin = 150,
+  jumps = c(2.38, 2.38, 2.38),
+  burnin = 100,
+  num.chains = 4,
+  printQ = FALSE
+)
 }
 \arguments{
 \item{nqn}{n quantum number}

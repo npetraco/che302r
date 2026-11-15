@@ -1,0 +1,1302 @@
+#--------------------------------------------
+#Convert spherical coordinates to Cartesian coordinates
+#--------------------------------------------
+#' @export
+spherical.to.cartesian<-function(rl,tha,pha) {
+  x<- rl * sin(tha) * cos(pha)
+  y<- rl * sin(tha) * sin(pha)
+  z<- rl * cos(tha)
+
+  return(c(x,y,z))
+}
+
+#--------------------------------------------
+#Convert Cartesian coordinates to spherical coordinates
+#--------------------------------------------
+#' @export
+cartesian.to.spherical<-function(xx.in,yy.in,zz.in) {
+
+  rl  <- sqrt(xx.in^2 + yy.in^2 + zz.in^2)
+  tha <- acos(zz.in/rl)
+  pha <- atan(xx.in/yy.in)
+
+  return(c(rl,tha,pha))
+}
+
+#--------------------------------------------
+#' @title Importance sample orbital density
+#' @description Sample the orbital wave function's density from a preset lattice of spherical coordinates
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param spherical.grid lattice of r, theta, phi values from which to sample
+#' @param num.samples number of samples desired
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Uses importance sampling from a lattice of
+#' r, theta, phi values. See Cromer reference for more details. Caution,
+#' requires large lattice to sample from (spherical.grid). This was basically
+#' version 1 of an orbital density sampling procedure.
+#'
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references D. Cromer, J Chem Educ. 45(10) 626-631 1968
+#'
+#' @examples
+#' rmax<-20
+#' dr<-0.05
+#' dth<-0.017
+#' dph<-0.017
+#' r<-seq(from=0,to=rmax,by=dr)
+#' theta<-seq(from=0,to=pi,by=dth)
+#' phi<-seq(from=0,to=2*pi,by=dph)
+#' print(paste("Grid size:",length(r)*length(theta)*length(phi)))
+#' spherical.grid.pts<-expand.grid(R=r,Theta=theta,Phi=phi) # Caution! This can get big!
+#'
+#' #Pick an orbital:
+#' n<-2
+#' l<-(1)
+#' m<-(1)
+#'
+#' #Sample the orbital density:
+#' num.pts<-10000
+#' denisty.samples<-sample.density2(n, l, m, spherical.grid.pts, num.pts)
+#' x<-denisty.samples[,1]
+#' y<-denisty.samples[,2]
+#' z<-denisty.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D with rgl
+#' plot3d(x,y,z,type="s",radius=0.1,xlab="x",ylab="y",zlab="z")
+#'
+#' @export
+#--------------------------------------------
+sample.density2<-function(nqn, lqn, mqn, spherical.grid, num.samples) {
+
+  r<-spherical.grid[,1]
+  theta<-spherical.grid[,2]
+  phi<-spherical.grid[,3]
+
+  #den.vals<-Re(psi.func(r,theta,phi)^2) #The Imaginary parts should be 0, but still need to extract Re
+  #den.vals<-orbital_density(nqn, lqn, mqn, spherical.grid) #Use the boost functions
+  den.vals <- r^2 * sin(theta) * Re((Radial(n, l, r) * LegendreP(l, m, theta) * PhiF(m, phi))^2)
+  den.max<-max(den.vals)                  #Approx max of the density
+  pratio.vals<-den.vals/den.max           #Ratio for monte carlo selection
+
+  count<-0
+  num.iter.keep<-num.samples #For now and speed sample the number of samples. This is a big change from Cromers paper. Much faster but may be wrong.
+  #Prune the grid around the most probable values:
+  keep.grid<-NULL
+  while(count<num.samples) {
+    q.iter<-runif(length(pratio.vals))
+    idxs<-which(pratio.vals>=q.iter)
+    if(length(idxs>0)) {
+      idx.pick<-sample(idxs,num.iter.keep)
+      keep.grid<-rbind(keep.grid,spherical.grid[idx.pick,])
+      count<-(count+length(idx.pick))
+      #print(count)
+    }
+  }
+  orbital<-t(sapply(1:num.samples,function(x){spherical.to.cartesian(keep.grid[x,1],keep.grid[x,2],keep.grid[x,3])}))
+
+  return(orbital)
+
+}
+
+#--------------------------------------------
+#
+#Radial wave functions using the orthopoly package
+#
+#--------------------------------------------
+#Generates the symbolic expression for the desired Laguerre polynomial
+#--------------------------------------------
+#' @export
+laguerreLgen<-function(nn,ll){
+
+  poly.nom <- glaguerre.polynomials(nn, ll, normalized=F)
+  poly.nom <- list(poly.nom[[length(poly.nom)]]) #to gen polynomial values orthopolynom func expexts a list
+
+  return(poly.nom)
+
+}
+
+#--------------------------------------------
+#Generate a numerical representation of the desired radial wavefunction
+#--------------------------------------------
+#' @export
+Radial<-function(nn,ll,rr){
+
+  lag.poly <- laguerreLgen(nn-ll-1, 2*ll+1)
+  #print(lag.poly)
+
+  #Radial.vals <- exp(-rr/nn) * rr^ll * polynomial.values(lag.poly,rr)[[1]]
+  Radial.vals <- sqrt(factorial(nn-ll-1)/factorial(nn+ll)) * exp(-rr/nn) * (2*rr/nn)^ll * (2/(nn)^2) * polynomial.values(lag.poly,2*rr/nn)[[1]]
+
+  return(Radial.vals)
+
+}
+
+#--------------------------------------------
+#
+#Angular wave functions using the Numerical Recipies routine
+#
+#There is no associated Legendre polynomial or spherical harmonic in orthopolynom, so we have to do it ourselves
+#--------------------------------------------
+#Generates the symbolic expression for a Legendre polynomial
+#--------------------------------------------
+#' @export
+legendrePgen<-function(ll){
+
+  poly.nom <- legendre.polynomials(ll, normalized=F)
+  poly.nom <- list(poly.nom[[length(poly.nom)]]) #to gen polynomial values orthopolynom func expects a list
+
+  return(poly.nom)
+
+}
+
+#--------------------------------------------
+#Generates the symbolic expression for |m|^th derivative Legendre polynomial. Needed for Associated Legendre polynomials
+#--------------------------------------------
+#' @export
+mderivlegendrePgen<-function(ll,mm){
+
+  polyd <- legendrePgen(l)
+  if(abs(mm)>0){
+    for(i in 1:abs(mm)){
+      polyd <- polynomial.derivatives(polyd)
+    }
+  }
+
+  return(polyd)
+}
+#--------------------------------------------
+#A pure function for the associated Legendre polynomial
+#--------------------------------------------
+#' @export
+LegendrePfunc<-function(ll,mm){
+
+  deriv.func <- polynomial.functions(mderivlegendrePgen(ll,mm))[[1]]
+
+  Plmx <- function(xx){
+    (-1)^abs(mm) * (1-xx^2)^(abs(mm)/2) * deriv.func(xx)
+  }
+
+  return(Plmx)
+
+}
+
+#--------------------------------------------
+#Compute a numerical representation for the associated Legendre polynomial
+#--------------------------------------------
+#' @export
+LegendreP<-function(ll,mm,thetaa){
+
+  xxx<-cos(thetaa)
+  vals <- LegendrePfunc(ll,mm)(xxx)
+
+  if(mm<0){
+    vals <- (-1)^mm * factorial(ll-mm)/factorial(ll+mm) * vals
+  }
+
+  normLP <- sqrt(((2*ll + 1)*factorial(ll - abs(mm)))/(2*factorial(ll + abs(mm))))
+
+  return(normLP * vals)
+
+}
+
+#--------------------------------------------
+#Compute the (numerical) Phi wave function for the equitorial angle
+#--------------------------------------------
+#' @export
+PhiF<-function(mm,phii){
+
+  return(1/sqrt(2*pi) * exp((mm*complex(real = 0, imaginary = 1))*phii))
+
+}
+
+
+
+#---------------------------------------------------
+# MCMC subroutines
+#---------------------------------------------------
+#
+#--------------------------------------------
+# Generate spline versions of the squared orbital component functions:
+# This will save us from having to re-evaluate using the slower polynomial functions during MCMC
+#--------------------------------------------
+#' @export
+splined.sqorb.functs <- function(n, l, m, r.max = 20, num.knots = 1000){
+
+  r     <- seq(from=1e-6, to=r.max, length.out = num.knots)
+  theta <- seq(from=0,    to=pi,    length.out = num.knots)
+  phi   <- seq(from=0,    to=2*pi,  length.out = num.knots)
+
+  R.sq.vals <- sapply(r, function(r){Radial(n, l, r)^2})
+  R.sq.func <- splinefun(r, R.sq.vals)
+  #plot(r, r^2*R.den.func(r),typ="l")      # Check: is tail of Radial part long enough?
+  #plot(r, log(r^2*R.den.func(r)),typ="l") # Check: is number of Radial nodes correct?
+
+  Th.sq.vals <- sapply(theta, function(theta){sin(theta) * LegendreP(l, m, theta)^2})
+  Th.sq.func <- splinefun(theta, Th.sq.vals)
+  #plot(theta, sin(theta)*Th.den.func(theta), typ="l")
+  #plot(theta, log(sin(theta)*Th.den.func(theta)), typ="l")
+
+  Ph.sq.vals <- sapply(phi, function(phi){Re(PhiF(m, phi))^2})
+  Ph.sq.func <- splinefun(phi, Ph.sq.vals)
+  #plot(phi, Ph.den.func(phi), typ="l")
+  #plot(phi, log(Ph.den.func(phi)), typ="l")
+
+  spline.orb.func.info <- list(
+    r,
+    theta,
+    phi,
+    R.sq.func,
+    Th.sq.func,
+    Ph.sq.func
+  )
+
+  names(spline.orb.func.info) <- c(
+    "r.axis",
+    "theta.axis",
+    "phi.axis",
+    "R.sq.func",
+    "Theta.sq.func",
+    "Phi.sq.func"
+  )
+
+  return(spline.orb.func.info)
+
+}
+
+
+#--------------------------------------------
+# Wrapper to generate orbital probability density and plot the radial part
+#--------------------------------------------
+#' @export
+generate.orbital.pdf <- function(n, l, m, r.max = 20, num.knots = 1000, plotR=T){
+
+  orb.sq.funcs  <- splined.sqorb.functs(n, l, m, r.max = r.max, num.knots = num.knots)
+  if(plotR==T){
+    rax           <- orb.sq.funcs$r.axis
+    R.sq          <- orb.sq.funcs$R.sq.func
+    plot(rax, rax^2 * R.sq(rax), typ="l", main=paste0("Radial Density for n=", n, ", l=",l))
+  }
+
+  return(orb.sq.funcs)
+
+}
+
+
+#--------------------------------------------
+# Next step proposal for Metropolis algorithm, generalized to any number of parameters.
+# CAUTION: uses Gaussian proposal
+#--------------------------------------------
+#' @export
+proposal <- function(theta.curr, proposal.wid){sapply(1:length(theta.curr), function(xx){rnorm(n = 1, mean = theta.curr[xx], sd = proposal.wid[xx])})}
+
+#--------------------------------------------
+# Orbital Ansatz using spline functions
+# Log Density ansatz. Pass in splined function info to hide from user. ****Looks yucky though!
+#--------------------------------------------
+#' @export
+ansatz <- function(a.theta, R.den.func, Th.den.func, Ph.den.func, rax.ext){
+
+  # abs the density functions incase they go slightly negative
+
+  if((a.theta[1] > 0) & (a.theta[1] <= rax.ext)){
+    val1 <- log( a.theta[1]^2 * abs(R.den.func(a.theta[1]))  )  # Replaces: Radial(n, l, a.theta[1])^2
+  } else {
+    val1 <- log(0)
+  }
+
+  if( (a.theta[2] >= 0) & (a.theta[2] <= pi) ) {
+    val2 <- log( sin(a.theta[2]) * abs(Th.den.func(a.theta[2])) ) # Replaces: (LegendreP(l, m, a.theta[2]))^2
+  } else {
+    val2 <- log(0)
+  }
+
+  if( (a.theta[3] >= 0) & (a.theta[3] <= 2*pi)){
+    val3 <- log( abs(Ph.den.func(a.theta[3])) )                   # Replaces: Re(PhiF(m, a.theta[3]))^2
+  } else {
+    val3 <- log(0)
+  }
+
+  val <- val1 + val2 + val3
+
+  return(val)
+}
+
+#--------------------------------------------
+# Log Metropolis ratio. Pass in splined function info to hide code...... Looks yucky
+#--------------------------------------------
+#' @export
+r.metrop <- function(theta.curr, theta.prop, rsf, thsf, phsf, rext){
+  val <- ansatz(theta.prop, rsf, thsf, phsf, rext) - ansatz(theta.curr, rsf, thsf, phsf, rext)
+  if(is.nan(val)){
+    val <- (-Inf)
+  }
+  return(val)
+}
+
+#--------------------------------------------
+# MCMC Metropolis routine:
+# Should execute for any number of dimensions for a parameter vector.
+# Requires that an ansatz (a not necessarily normalized pdf) be defined
+#--------------------------------------------
+#' @export
+sampler.gen <- function(num.iter=100, theta.init=c(0.5,0.5), proposal.width=c(0.5,0.5), spline.func.info){
+
+  theta.current     <- theta.init
+  ansatz.sample     <- array(NA,c(num.iter, length(theta.init))) # to theta sample from ansatz
+  ansatz.sample[1,] <- theta.current
+  accept.ps         <- array(NA,num.iter-1) # capture all acceptance probs just for checks
+  accept.indcs      <- array(NA,num.iter-1) # capture all acceptance indicators just for checks
+
+  # To pass into r.metrop and then to ansatz routine: YUK!!!!!!
+  rsqf  <- spline.func.info$R.sq.func
+  thsqf <- spline.func.info$Theta.sq.func
+  phsqf <- spline.func.info$Phi.sq.func
+  rmx   <- max(spline.func.info$r.axis)
+
+  for(i in 2:num.iter){
+
+    #print(i)
+
+    # suggest new position
+    theta.proposal <- proposal(theta.curr = theta.current, proposal.wid = proposal.width)
+
+    # Accept proposal. Note log(ratio) and also pass in splined density parts. Can we do this better??
+    accept.ratio <- r.metrop(
+      theta.curr = theta.current,
+      theta.prop = theta.proposal, rsqf, thsqf, phsqf, rmx)
+
+    acceptQ           <- log(runif(1)) < accept.ratio
+    accept.ps[i-1]    <- min(1,exp(accept.ratio))     # Just for checking
+    accept.indcs[i-1] <- acceptQ                      # Just for checking
+
+    if(acceptQ) {
+      # Update position
+      theta.current <- theta.proposal
+    }
+
+    ansatz.sample[i,] <- theta.current
+
+  }
+
+  return(list(ansatz.sample, accept.ps, accept.indcs))
+
+}
+
+#--------------------------------------------
+#Sample the wave function's density and plot corresponding r,theta, phi (x,y,z) values
+#Now uses MCMC Metropolis algorithm.
+#
+# Wrapper to run MCMC for the orbital densities:
+#--------------------------------------------
+#' @export
+sample.density3a<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.thin=1, num.burnin=0) {
+
+  mpi  <- sampler.gen(
+    theta.init       = runif(3, min = 0, max = 1),
+    proposal.width   = c(1,1,1),
+    num.iter         = num.samples,
+    spline.func.info = orb.func.info)
+
+  mp   <- mpi[[1]] # Chain
+  ap   <- mpi[[2]] # Acceptance probs
+  ai   <- mpi[[3]] # Acceptance indicators
+
+  # Remove burn-in and Thin:
+  keep.idxs <- seq(num.burnin+1,nrow(mp),num.thin)
+  mp2  <- mp[keep.idxs, ]
+
+  # Transform to x, y, z coords:
+  samp.coords <- t(sapply(1:nrow(mp2),function(xx){spherical.to.cartesian(mp2[xx,1],mp2[xx,2],mp2[xx,3])}))
+
+  colnames(samp.coords) <- c("x","y","z")
+
+  print(paste("The final sample size is:", nrow(samp.coords)))
+
+  return(samp.coords)
+
+}
+
+#--------------------------------------------
+# Wrapper to run MCMC for the orbital densities. This one we can input the proposal jump widths:
+#--------------------------------------------
+#' @export
+sample.density3b<-function(nqn, lqn, mqn, orb.func.info, num.samples=5000, num.thin=1, num.burnin=0, jump.widths=c(1,1,1), printQ=FALSE) {
+
+  mpi  <- sampler.gen(
+    theta.init       = runif(3, min = 0, max = 1),
+    proposal.width   = jump.widths,
+    num.iter         = num.samples,
+    spline.func.info = orb.func.info)
+
+  mp   <- mpi[[1]] # Chain
+  ap   <- mpi[[2]] # Acceptance probs
+  ai   <- mpi[[3]] # Acceptance indicators
+
+  if(printQ==TRUE) {
+    perc.1s    <- length(which(ap==1))/length(ap) * 100
+    accpt.rate <- sum(ai)/length(ai) * 100 # Acceptance rate
+    print(paste0("Higher move percentage: ", round(perc.1s,2), "%"))
+    print(paste0("Acceptance rate:        ", round(accpt.rate,2), "%"))
+  }
+
+  # Remove burn-in and Thin:
+  keep.idxs <- seq(num.burnin+1,nrow(mp),num.thin)
+  mp2  <- mp[keep.idxs, ]
+
+  # if(printQ==TRUE) {
+  #   par(mfrow=c(3,1))
+  #   acf(mp2[,1])
+  #   acf(mp2[,2])
+  #   acf(mp2[,3])
+  # }
+
+  # Transform to x, y, z coords:
+  samp.coords <- t(sapply(1:nrow(mp2),function(xx){spherical.to.cartesian(mp2[xx,1],mp2[xx,2],mp2[xx,3])}))
+  samp.coords <- cbind(samp.coords, mp2)
+
+  colnames(samp.coords) <- c("x","y","z","r","theta","phi")
+
+  print(paste("The final sample size is:", nrow(samp.coords)))
+
+  return(samp.coords)
+
+}
+
+
+#--------------------------------------------
+#' @title MCMC sample orbital density
+#' @description Sample the orbital wave function's density by simple Metropolis Markov Chain Monte Carlo
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param orb.func.info Orbital pdfs info generated by splined.sqorb.functs()
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Uses MCMC. Under the hood, this is a VERY stripped down wrapper
+#' (to a wrapper: sample.density3b) to run MCMC. CHECK THAT YOU GET ALL THE NODES IN YOUR WAVE
+#' FUNCTIONS! MCMC by itself can easily miss them.
+#'
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references XXXXX
+#'
+#' @examples
+#' library(che302r)
+#' library(parallel)
+#' library(doSNOW)
+#' library(rgl)
+#'
+#' #Pick an orbital:
+#' n <- 1
+#' l <- 0
+#' m <- (0)
+#'
+#' # Create squared orbital functions for sampling
+#' orb.sq.funcs  <- splined.sqorb.functs(n, l, m, r.max = 320, num.knots = 1000)
+#' rax           <- orb.sq.funcs$r.axis
+#' R.sq          <- orb.sq.funcs$R.sq.func
+#' plot(rax, rax^2 * R.sq(rax), typ="l")
+#'
+#' #Sample the orbital density:
+#' #detectCores() # Number of processors available
+#'
+#' #density.samples <- sample.orbital.density.ais(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' density.samples <- sample.orbital.density.mcmc(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.ais.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 2)
+#' #density.samples <- sample.orbital.density.mcmc.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 4)
+#'
+#' # Sample in cartesian coordinates
+#' x               <- density.samples[,1]
+#' y               <- density.samples[,2]
+#' z               <- density.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D
+#' plot3d(x,y,z,type="s",radius=1.5,xlab="x",ylab="y",zlab="z")
+#'
+#' # 3D slices
+#' plot3d(x,y,rep(0,length(z)),type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#'
+#' @export
+#--------------------------------------------
+sample.orbital.density.mcmc<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE) {
+
+  print("====== Normal pass ======")
+  normal.pass.samp.size <- 187500
+
+  samp.coords <- NULL
+
+   for(i in 1:4) {
+
+     print(paste("---- Starting Chain:", i, "----"))
+
+     samp.coords <- rbind(samp.coords,
+                          sample.density3b(nqn, lqn, mqn, orb.func.info,
+                                           num.samples = normal.pass.samp.size,
+                                           num.thin    = 150,
+                                           jump.widths = c(2.38,2.38,2.38),
+                                           num.burnin  = 100,
+                                           printQ)
+                          )
+     print(paste("---- Chain:", i, "Done ----"))
+  }
+
+  colnames(samp.coords) <- c("x","y","z","r","theta","phi")
+
+  print(paste("The total final sample size is:", nrow(samp.coords)))
+
+  return(samp.coords)
+
+}
+
+
+#--------------------------------------------
+#' @title MCMC sample orbital density in separate processes
+#' @description Parallel version of sample.orbital.density.mcmc
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param orb.func.info Orbital pdfs info generated by splined.sqorb.functs()
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Uses MCMC. Do each sampling chain in parallel. Under the hood, this is a VERY stripped down wrapper
+#' (to a wrapper: sample.density3b) to run MCMC. CHECK THAT YOU GET ALL THE NODES IN YOUR WAVE
+#' FUNCTIONS! MCMC by itself can easily miss them.
+#'
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references XXXXX
+#'
+#' @examples
+#' library(che302r)
+#' library(parallel)
+#' library(doSNOW)
+#' library(rgl)
+#'
+#' #Pick an orbital:
+#' n <- 1
+#' l <- 0
+#' m <- (0)
+#'
+#' # Create squared orbital functions for sampling
+#' orb.sq.funcs  <- splined.sqorb.functs(n, l, m, r.max = 320, num.knots = 1000)
+#' rax           <- orb.sq.funcs$r.axis
+#' R.sq          <- orb.sq.funcs$R.sq.func
+#' plot(rax, rax^2 * R.sq(rax), typ="l")
+#'
+#' #Sample the orbital density:
+#' detectCores() # Number of processors available
+#'
+#' #density.samples <- sample.orbital.density.ais(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.mcmc(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.ais.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 2)
+#' density.samples <- sample.orbital.density.mcmc.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 4)
+#'
+#' # Sample in cartesian coordinates
+#' x               <- density.samples[,1]
+#' y               <- density.samples[,2]
+#' z               <- density.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D
+#' plot3d(x,y,z,type="s",radius=1.5,xlab="x",ylab="y",zlab="z")
+#'
+#' # 3D slices
+#' plot3d(x,y,rep(0,length(z)),type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#'
+#' @export
+#--------------------------------------------
+sample.orbital.density.mcmc.parallel<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, num.processes=1) {
+
+  #registerDoMC(num.processes)
+
+  #print(paste("Using",getDoParWorkers(), "processes."))
+
+  print("====== Normal pass ======")
+  normal.pass.samp.size <- 187500
+
+  # samp.coords <- foreach(i=1:4, .combine="rbind") %dopar% {
+  #   sample.density3b(nqn, lqn, mqn, orb.func.info,
+  #                    num.samples = normal.pass.samp.size,
+  #                    num.thin    = 150,
+  #                    jump.widths = c(2.38,2.38,2.38),
+  #                    num.burnin  = 100,
+  #                    printQ)
+  # }
+  # Run parallel loop here with progress bar
+  cl <- makeSOCKcluster(num.processes)
+  registerDoSNOW(cl)
+  pb <- txtProgressBar(min=1, max=4, style=3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress=progress)
+
+  samp.coords <-
+    foreach(i=1:4,  .options.snow=opts, .combine='rbind') %dopar% {
+      sample.density3b(nqn, lqn, mqn, orb.func.info,
+                       num.samples = normal.pass.samp.size,
+                       num.thin    = 150,
+                       jump.widths = c(2.38,2.38,2.38),
+                       num.burnin  = 100,
+                       printQ)
+    }
+  close(pb)
+  stopCluster(cl)
+
+
+  colnames(samp.coords) <- c("x","y","z","r","theta","phi")
+
+  print(paste("The total final sample size is:", nrow(samp.coords)))
+
+  return(samp.coords)
+
+}
+
+#--------------------------------------------
+#' @title Sample the wave function's density using AIS
+#' @description Sample the wave function's density using annealed importance sampling
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param orb.func.info Orbital pdfs info generated by splined.sqorb.functs()
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Uses annealed importance sampling (AIS).
+#' This fancy-er kind of MCMC is a little better at catching all the nodes in the wave function.
+#'
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references Recipe adapted from https://wiseodd.github.io/techblog/2017/12/23/annealed-importance-sampling/
+#'
+#' @examples
+#' library(che302r)
+#' library(parallel)
+#' library(doSNOW)
+#' library(rgl)
+#'
+#' #Pick an orbital:
+#' n <- 1
+#' l <- 0
+#' m <- (0)
+#'
+#' # Create squared orbital functions for sampling
+#' orb.sq.funcs  <- splined.sqorb.functs(n, l, m, r.max = 320, num.knots = 1000)
+#' rax           <- orb.sq.funcs$r.axis
+#' R.sq          <- orb.sq.funcs$R.sq.func
+#' plot(rax, rax^2 * R.sq(rax), typ="l")
+#'
+#' #Sample the orbital density:
+#' #detectCores() # Number of processors available
+#'
+#' density.samples <- sample.orbital.density.ais(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.mcmc(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.ais.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 2)
+#' #density.samples <- sample.orbital.density.mcmc.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 4)
+#'
+#' # Sample in cartesian coordinates
+#' x               <- density.samples[,1]
+#' y               <- density.samples[,2]
+#' z               <- density.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D
+#' plot3d(x,y,z,type="s",radius=1.5,xlab="x",ylab="y",zlab="z")
+#'
+#' # 3D slices
+#' plot3d(x,y,rep(0,length(z)),type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#'
+#' @export
+#--------------------------------------------
+sample.orbital.density.ais<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE) {
+
+  rsqf  <- orb.func.info$R.sq.func
+  thsqf <- orb.func.info$Theta.sq.func
+  phsqf <- orb.func.info$Phi.sq.func
+  rmx   <- max(orb.func.info$r.axis)
+
+  # Work on the log-scale:
+
+  # Target density f(0)
+  logf0 <- function(an.x){
+
+    loglik0 <-
+      log(an.x[1]^2    * abs(rsqf(an.x[1])) )  +  # abs-ing incase splines went a little negative
+      log(sin(an.x[2]) * abs(thsqf(an.x[2])) ) +
+      log(               abs(phsqf(an.x[3])) )
+
+    return(loglik0)
+  }
+
+  # Starting (Importance) density f(n)
+  logfn <- function(an.x){
+
+    return(
+      dunif(an.x[1], min = 0, max = rmx,  log = T) +
+        dunif(an.x[2], min = 0, max = pi,   log = T) +
+        dunif(an.x[3], min = 0, max = 2*pi, log = T)
+    )
+
+  }
+
+  # Generates an initial starting point for a sample from importance distribution, x ~ p(n)
+  pn <- function(){
+
+    return(
+      c(runif(1, min = 0, max = rmx),
+        runif(1, min = 0, max = pi),
+        runif(1, min = 0, max = 2*pi))
+    )
+
+  }
+
+  # Intermediate (annealing) densities
+  logfj <- function(an.x, a.beta){
+    return(a.beta * logf0(an.x) + (1-a.beta) * logfn(an.x))
+  }
+
+  # Transition kernel to bridge from starting density to target density with short MCMCa
+  TransK <- function(an.x, a.beta, n.steps=10){
+    for(t in 1:n.steps) {
+
+      # Proposal
+      x.prime <- c(NA,NA,NA)
+
+      x.prime[1] <- an.x[1] + runif(1, min = -rmx, max = rmx)
+      if(x.prime[1] < 0) {
+        x.prime[1] <- x.prime[1] %% rmx
+      } else if(x.prime[1] > rmx) {
+        x.prime[1] <- x.prime[1] %% rmx
+      }
+
+      x.prime[2] <- an.x[2] + runif(1, min = -pi, max = pi)
+      if(x.prime[2] < 0) {
+        x.prime[2] <- x.prime[2] %% pi
+      } else if(x.prime[2] > pi){
+        x.prime[2] <- x.prime[2] %% pi
+      }
+
+      x.prime[3] <- an.x[3] + runif(1, min = -2*pi, max = 2*pi)
+      if(x.prime[3] < 0) {
+        x.prime[3] <- x.prime[3] %% 2*pi
+      } else if(x.prime[3] > 2*pi){
+        x.prime[3] <- x.prime[3] %% 2*pi
+      }
+
+      # log Acceptance prob
+      log.accp <- logfj(x.prime, a.beta) - logfj(an.x, a.beta)
+
+      if(is.na( log.accp )){
+        print("Problem!!!!!!!")
+        print(paste("beta:", a.beta))
+        print(paste("x:", an.x))
+        print(paste("log f_j(x, beta)", lf_j(an.x, a.beta)))
+        print(paste("x.prime:", x.prime))
+        print(paste("log f_j(x.prime, beta)", lf_j(x.prime, a.beta)))
+      }
+
+      out.x <- an.x
+      if(log(runif(1)) < log.accp){
+        out.x <- x.prime
+      }
+
+    }
+
+    return(out.x)
+
+  }
+
+  # Do the sampling
+  n.beta   <- 50 # Bridge over this many intermediate densities
+  beta.seq <- seq(from = 0, to = 1, length.out = n.beta) # Inverse temp sequence
+
+  n.samples   <- 2500 # Sample size sought from target density
+  the.samples <- array(NA, c(n.samples,3))
+  the.weights <- numeric(n.samples)
+
+  # Do the sampling
+  for(i in 1:n.samples){
+
+    # Sample initial point from pn(x)
+    xi <- pn()
+    wi <- 1
+
+    for(j in 2:length(beta.seq)){
+
+      # Transition
+      xi <- TransK(xi, beta.seq[j], n.steps=5)
+
+      # Compute weight in log space (log-sum):
+      wi <- wi + ( logfj(xi, beta.seq[j]) - logfj(xi, beta.seq[j-1]) )
+    }
+
+    if(printQ == TRUE) {
+      print(paste("Done sample:", i))
+    }
+
+    the.samples[i,] <- xi
+    the.weights[i] <- exp(wi)  # Transform back using exp
+
+  }
+
+  # Transform to x, y, z coords:
+  samp.coords <- t(sapply(1:nrow(the.samples),function(xx){spherical.to.cartesian(the.samples[xx,1],the.samples[xx,2],the.samples[xx,3])}))
+  samp.coords <- cbind(samp.coords, the.samples, the.weights)
+
+  colnames(samp.coords) <- c("x","y","z","r","theta","phi", "wt")
+
+  print(paste("The final sample size is:", nrow(samp.coords)))
+
+  return(samp.coords)
+
+}
+
+
+#--------------------------------------------
+#' @title Sample the wave function's density using AIS in parallel
+#' @description Sample the wave function's density using but now in parallel
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param orb.func.info Orbital pdfs info generated by splined.sqorb.functs()
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Uses annealed importance sampling (AIS).
+#' This fancy-er kind of MCMC is a little better at catching all the nodes in the wave function.
+#' Samples each chain in a separate process.
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references Recipe adapted from https://wiseodd.github.io/techblog/2017/12/23/annealed-importance-sampling/
+#'
+#' @examples
+#' library(che302r)
+#' library(parallel)
+#' library(doSNOW)
+#' library(rgl)
+#'
+#' #Pick an orbital:
+#' n <- 1
+#' l <- 0
+#' m <- (0)
+#'
+#' # Create squared orbital functions for sampling
+#' orb.sq.funcs  <- splined.sqorb.functs(n, l, m, r.max = 320, num.knots = 1000)
+#' rax           <- orb.sq.funcs$r.axis
+#' R.sq          <- orb.sq.funcs$R.sq.func
+#' plot(rax, rax^2 * R.sq(rax), typ="l")
+#'
+#' #Sample the orbital density:
+#' #detectCores() # Number of processors available
+#'
+#' #density.samples <- sample.orbital.density.ais(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.mcmc(n, l, m, printQ = T, orb.func.info = orb.sq.funcs)
+#' #density.samples <- sample.orbital.density.ais.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 2)
+#' density.samples <- sample.orbital.density.mcmc.parallel(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, num.processes = 4)
+#'
+#' # Sample in cartesian coordinates
+#' x               <- density.samples[,1]
+#' y               <- density.samples[,2]
+#' z               <- density.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D
+#' plot3d(x,y,z,type="s",radius=1.5,xlab="x",ylab="y",zlab="z")
+#'
+#' # 3D slices
+#' plot3d(x,y,rep(0,length(z)),type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#'
+#' @export
+#--------------------------------------------
+sample.orbital.density.ais.parallel<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, num.processes=1) {
+
+  rsqf  <- orb.func.info$R.sq.func
+  thsqf <- orb.func.info$Theta.sq.func
+  phsqf <- orb.func.info$Phi.sq.func
+  rmx   <- max(orb.func.info$r.axis)
+
+  # Work on the log-scale:
+
+  # Target density f(0)
+  logf0 <- function(an.x){
+
+    loglik0 <-
+      log(an.x[1]^2    * abs(rsqf(an.x[1])) )  +  # abs-ing incase splines went a little negative
+      log(sin(an.x[2]) * abs(thsqf(an.x[2])) ) +
+      log(               abs(phsqf(an.x[3])) )
+
+    return(loglik0)
+  }
+
+  # Starting (Importance) density f(n)
+  logfn <- function(an.x){
+
+    return(
+      dunif(an.x[1], min = 0, max = rmx,  log = T) +
+        dunif(an.x[2], min = 0, max = pi,   log = T) +
+        dunif(an.x[3], min = 0, max = 2*pi, log = T)
+    )
+
+  }
+
+  # Generates an initial starting point for a sample from importance distribution, x ~ p(n)
+  pn <- function(){
+
+    return(
+      c(runif(1, min = 0, max = rmx),
+        runif(1, min = 0, max = pi),
+        runif(1, min = 0, max = 2*pi))
+    )
+
+  }
+
+  # Intermediate (annealing) densities
+  logfj <- function(an.x, a.beta){
+    return(a.beta * logf0(an.x) + (1-a.beta) * logfn(an.x))
+  }
+
+  # Transition kernel to bridge from starting density to target density with short MCMCa
+  TransK <- function(an.x, a.beta, n.steps=10){
+    for(t in 1:n.steps) {
+
+      # Proposal
+      x.prime <- c(NA,NA,NA)
+
+      x.prime[1] <- an.x[1] + runif(1, min = -rmx, max = rmx)
+      if(x.prime[1] < 0) {
+        x.prime[1] <- x.prime[1] %% rmx
+      } else if(x.prime[1] > rmx) {
+        x.prime[1] <- x.prime[1] %% rmx
+      }
+
+      x.prime[2] <- an.x[2] + runif(1, min = -pi, max = pi)
+      if(x.prime[2] < 0) {
+        x.prime[2] <- x.prime[2] %% pi
+      } else if(x.prime[2] > pi){
+        x.prime[2] <- x.prime[2] %% pi
+      }
+
+      x.prime[3] <- an.x[3] + runif(1, min = -2*pi, max = 2*pi)
+      if(x.prime[3] < 0) {
+        x.prime[3] <- x.prime[3] %% 2*pi
+      } else if(x.prime[3] > 2*pi){
+        x.prime[3] <- x.prime[3] %% 2*pi
+      }
+
+      # log Acceptance prob
+      log.accp <- logfj(x.prime, a.beta) - logfj(an.x, a.beta)
+
+      if(is.na( log.accp )){
+        print("Problem!!!!!!!")
+        print(paste("beta:", a.beta))
+        print(paste("x:", an.x))
+        print(paste("log f_j(x, beta)", lf_j(an.x, a.beta)))
+        print(paste("x.prime:", x.prime))
+        print(paste("log f_j(x.prime, beta)", lf_j(x.prime, a.beta)))
+      }
+
+      out.x <- an.x
+      if(log(runif(1)) < log.accp){
+        out.x <- x.prime
+      }
+
+    }
+
+    return(out.x)
+
+  }
+
+  #-----------------
+  # Do the sampling
+  #-----------------
+  n.beta    <- 50 # Bridge over this many intermediate densities
+  beta.seq  <- seq(from = 0, to = 1, length.out = n.beta) # Inverse temp sequence
+  n.samples <- 5000 # Sample size sought from target density
+
+  # Sample function for parallel loop kernel. Every execution of this produces a sample:
+  a.sample <- function() {
+
+    # Sample initial point from pn(x)
+    xi <- pn()
+    wi <- 1
+
+    for(jj in 2:length(beta.seq)){
+
+      # Transition
+      xi <- TransK(xi, beta.seq[jj], n.steps=5)
+
+      # Compute weight in log space (log-sum):
+      wi <- wi + ( logfj(xi, beta.seq[jj]) - logfj(xi, beta.seq[jj-1]) )
+    }
+
+    return(c(xi, exp(wi)))
+
+  }
+
+  # Run parallel loop here with progress bar
+  cl <- makeSOCKcluster(num.processes)
+  registerDoSNOW(cl)
+  pb <- txtProgressBar(min=1, max=n.samples, style=3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress=progress)
+
+  the.samples <-
+    foreach(i=1:n.samples,  .options.snow=opts, .combine='rbind') %dopar% {
+      a.sample()
+    }
+  close(pb)
+  stopCluster(cl)
+
+  # Transform to x, y, z coords:
+  samp.coords <- t(sapply(1:nrow(the.samples),function(xx){spherical.to.cartesian(the.samples[xx,1],the.samples[xx,2],the.samples[xx,3])}))
+  samp.coords <- cbind(samp.coords, the.samples)
+
+  colnames(samp.coords) <- c("x","y","z","r","theta","phi", "wt")
+
+  print(paste("The final sample size is:", nrow(samp.coords)))
+
+  return(samp.coords)
+
+}
+
+
+#--------------------------------------------
+#' @title Sample the wave function's density using a choice of algorithms and schemes
+#' @description Sample the wave function's density
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param orb.func.info Orbital pdfs info generated by splined.sqorb.functs()
+#' @param algorithm Can be "ais" or "mcmc"
+#' @param type Can be "serial" or "parallel"
+#'
+#' @details Sample the wave function's density and plot corresponding
+#' r,theta, phi (x,y,z) values. Can do MCMC, or AIS. MCMC and AIS
+#' chains can be run in parallel for extra speed.
+#'
+#' @return orbital sample matrix (num.sample-rows by 3-columns)
+#'
+#' @references XXXXX
+#'
+#' @examples
+#' library(che302r)
+#' library(parallel)
+#' library(doSNOW)
+#' library(rgl)
+#'
+#' #Pick an orbital:
+#' n <- 1
+#' l <- 0
+#' m <- (0)
+#'
+#' # Create squared orbital functions for sampling
+#' orb.sq.funcs  <- splined.sqorb.functs(n, l, m, r.max = 320, num.knots = 1000)
+#' rax           <- orb.sq.funcs$r.axis
+#' R.sq          <- orb.sq.funcs$R.sq.func
+#' plot(rax, rax^2 * R.sq(rax), typ="l")
+#'
+#' #Sample the orbital density:
+#' #detectCores() # Number of processors available
+#'
+#' #density.samples <- sample.orbital.density(n, l, m, printQ = T, orb.func.info = orb.sq.funcs, algorithm="ais", type="parallel", num.processes = 4)
+#'
+#' # Sample in cartesian coordinates
+#' x               <- density.samples[,1]
+#' y               <- density.samples[,2]
+#' z               <- density.samples[,3]
+#'
+#' #Plot the sampled orbital density:
+#' #2D
+#' plot(x,y)
+#' plot(x,z)
+#' plot(y,z)
+#'
+#' #3D
+#' plot3d(x,y,z,type="s",radius=1.5,xlab="x",ylab="y",zlab="z")
+#'
+#' # 3D slices
+#' plot3d(x,y,rep(0,length(z)),type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(x,rep(0,length(y)),z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#' plot3d(rep(0,length(x)), y, z,type="s",radius=0.5,xlab="x",ylab="y",zlab="z")
+#'
+#' @export
+#--------------------------------------------
+sample.orbital.density<-function(nqn, lqn, mqn, orb.func.info, printQ=FALSE, algorithm="ais", type="serial", num.processes=1) {
+
+  if(algorithm=="mcmc") {
+    if(type=="serial") {
+      samp.coords <- sample.orbital.density.mcmc(nqn, lqn, mqn, orb.func.info, printQ)
+    } else if(type=="parallel") {
+      samp.coords <- sample.orbital.density.mcmc.parallel(nqn, lqn, mqn, orb.func.info, printQ, num.processes = num.processes)
+    } else {
+      stop("Choose serial or parallel")
+    }
+  } else if(algorithm=="ais") {
+    if(type=="serial") {
+      samp.coords <- sample.orbital.density.ais(nqn, lqn, mqn, orb.func.info, printQ)
+    } else if(type=="parallel") {
+      samp.coords <- sample.orbital.density.ais.parallel(nqn, lqn, mqn, orb.func.info, printQ, num.processes = num.processes)
+    } else {
+      stop("Choose serial or parallel")
+    }
+  } else {
+    stop("Choose ais or mcmc")
+  }
+
+  return(samp.coords)
+
+}
+
+
+#--------------------------------------------
+#' @title Sample colors as a function of radial node
+#' @description XX
+#'
+#' @param nqn n quantum number
+#' @param lqn l quantum number
+#' @param mqn m quantum number
+#' @param orb.func.info Orbital pdfs info generated by splined.sqorb.functs()
+#'
+#' @details XX
+#'
+#' @return XX
+#'
+#' @references Class of F26
+#'
+#' @examples
+#' XX
+#'
+#' @export
+#--------------------------------------------
+sample.colors<-function(nqn, lqn, orb.func.info, radial.dists, radial.cols=NULL, plotR=F) {
+
+  num.nodes <- nqn - lqn - 1
+  # Form up-sampled radial density function and spline it:
+  R2   <- orb.func.info$R.sq.func
+  r    <- seq(from=min(orb.func.info$r.axis), to=max(orb.func.info$r.axis), length.out=10000) # The "up-sampling" part
+  Rden <- splinefun(r, r^2 * R2(r))
+
+  if(num.nodes != 0){
+
+    # Take derivatives of radial density:
+    d1Rden <- Rden(r, deriv = 1)
+    d2Rden <- Rden(r, deriv = 2)
+
+    # Critical points:
+    extrema_indices <- which(abs(diff(sign(d1Rden))) == 2)
+
+    # Select the critical points that are minima:
+    minima_r <- r[extrema_indices][d2Rden[extrema_indices] > 0]
+
+    # Check if the first minima is the first point on the r-axis. This happens sometimes:
+    if(r[1] == minima_r[1]){
+      minima_r = minima_r[-1] # Drop if this happens
+    }
+
+    # Check again for false minima
+    if(num.nodes != length(minima_r)) {
+      print("=========================================")
+      print("****Uh-oh! False minima detected!****")
+      print(paste0("Number of nodes supposed to be: ", num.nodes))
+      print(paste0("Number of nodes detected:       ", length(minima_r)))
+      print(paste0("Smallest r-axis value           ", r[1]))
+      print("All extrema:")
+      print(r[extrema_indices])
+      print("Minima (nodes) detected:")
+      print(minima_r)
+      print("Dropping first minima, but DOUBLE CHECK!!")
+      minima_r <- minima_r[-1]
+      print("Nodes now at:")
+      print(minima_r)
+      print("=========================================")
+      warning("****Uh-oh! False minima detected! See above...****")
+    }
+
+    # Generate nodal intervals:
+    cut.vec <- c(0, minima_r, Inf)
+
+    if(is.null(radial.cols)){
+      lobe.cols    <- c("chocolate1", "royalblue3", "yellow2", "purple4", "red", "seagreen4",
+                        "chocolate1", "royalblue3", "purple4", "yellow2", "seagreen4","red")
+    } else {
+      lobe.cols <- radial.cols
+    }
+
+
+    lobe.idx <- findInterval(radial.dists, cut.vec)
+    col.idx  <- ((lobe.idx-1)%%length(lobe.cols)) + 1
+    col.vec  <- lobe.cols[col.idx]
+
+  } else {
+    if(is.null(radial.cols)){
+      col.vec <- "black" # color is black for no radial nodes for a default
+    } else {
+      col.vec <- radial.cols # or user can color it whateves
+    }
+
+  }
+
+  if(plotR==T){
+    plot(r, Rden(r), typ="l", main=paste0("Radial Density for n=", nqn, ", l=",lqn))
+    print(paste0("Num. rad. nodes: n(=",nqn,")-l(=",lqn,")-1 = ", num.nodes))
+
+    if(num.nodes != 0){
+      #node.cols
+      r.col <- findInterval(r, cut.vec)
+      r.col <- lobe.cols[((r.col-1)%%length(lobe.cols)) + 1]
+      plot(r, Rden(r), typ="p", pch=16, col=r.col, main=paste0("Radial Density for n=", nqn, ", l=",lqn))
+      points(minima_r, numeric(length(minima_r)), col = "black", pch=16)
+      lines(r, Rden(r), lwd=2)
+    }
+
+  }
+
+  return(col.vec)
+
+}
